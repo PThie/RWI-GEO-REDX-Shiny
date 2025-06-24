@@ -33,19 +33,29 @@ server <- function(input, output, session) {
 
     housing_type_data <- reactive({
         req(input$select_housing_type)
+        req(input$select_year)
+
+        var_of_interest <- paste0(
+            "pindex",
+            input$select_year
+        )
 
         filtered <- redx_data |>
             dplyr::filter(
                 housing_type == input$select_housing_type
             ) |>
-            dplyr::filter(!is.na(pindex2008))
+            dplyr::filter(!is.na(pindex2008)) |>
+            dplyr::select(
+                grid,
+                housing_type,
+                var_of_interest
+            )
 
-        print(nrow(filtered))
         filtered
     })
 
     output$tst <- renderTable({housing_type_data()})
-    # output$tst <- renderTable(redx_data)
+
     #--------------------------------------------------
     # create map
     # NOTE: for background maps check: https://leaflet-extras.github.io/leaflet-providers/preview/
