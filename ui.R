@@ -15,6 +15,11 @@ suppressPackageStartupMessages({
 })
 
 #--------------------------------------------------
+# source config file
+
+source("config.R")
+
+#--------------------------------------------------
 # start front end
 
 ui <- shinydashboard::dashboardPage(
@@ -27,8 +32,8 @@ ui <- shinydashboard::dashboardPage(
         shinydashboard::sidebarMenu(
             id = "sidebar",
             shinydashboard::menuItem(
-                text = "Housing Types",
-                icon = shiny::icon("home")
+                text = "Options",
+                icon = shiny::icon("gears")
             )
         ),
         selectInput(
@@ -39,7 +44,16 @@ ui <- shinydashboard::dashboardPage(
                 "Apartment sales" = "WK",
                 "Apartment rents" = "WM",
                 "Combined" = "CI"
-            )
+            ),
+            # set default value
+            selected = "CI"
+        ),
+        selectInput(
+            inputId = "select_year",
+            label = "Select year:",
+            choices = seq(2008, config_globals()[["max_year"]], by = 1),
+            # set default value
+            selected = config_globals()[["max_year"]]
         )
     ),
 
