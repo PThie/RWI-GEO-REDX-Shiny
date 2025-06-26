@@ -24,6 +24,17 @@ suppressPackageStartupMessages({
 
 source("config.R")
 
+lapply(
+    list.files(
+        file.path(
+            config_paths()[["project_path"]],
+            "helpers"
+        ),
+        full.names = TRUE
+    ),
+    source
+)
+
 #--------------------------------------------------
 # read data
 
