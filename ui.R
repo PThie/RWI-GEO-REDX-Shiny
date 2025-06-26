@@ -1,25 +1,4 @@
 #--------------------------------------------------
-# load libraries
-
-suppressPackageStartupMessages({
-    library(shiny)
-    library(htmltools)
-    library(shinyjs)
-    library(leaflet)
-    library(dplyr)
-    library(glue)
-    library(sf)
-    library(openxlsx)
-    library(data.table)
-    library(shinydashboard)
-})
-
-#--------------------------------------------------
-# source config file
-
-source("config.R")
-
-#--------------------------------------------------
 # start front end
 
 ui <- shinydashboard::dashboardPage(
@@ -58,7 +37,7 @@ ui <- shinydashboard::dashboardPage(
     ),
 
     shinydashboard::dashboardBody(
-        #leaflet::leafletOutput("map", height = "100vh")
-        tableOutput("tst")
+        leaflet::leafletOutput("map", height = "100vh")
+        # tableOutput("tst")
     )
 )
