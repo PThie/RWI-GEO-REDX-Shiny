@@ -11,16 +11,11 @@ helpers_preparing_redx_data <- function() {
     # read data
 
     # PUF RWI-GEO-REDX data
-    redx_data <- openxlsx::read.xlsx(
+    redx_data <- arrow::read_parquet(
         file.path(
-            config_paths()[["redx_data"]],
-            paste0(
-                "RWIGEOREDX_GRIDS_v",
-                config_globals()[["redx_version"]],
-                "_PUF.xlsx"
-            )
-        ),
-        sheet = "Grids_RegionEff_abs_yearly"
+            config_paths()[["data_path"]],
+            "redx_data_puf.parquet"
+        )
     )
 
     # grid information
@@ -58,6 +53,15 @@ helpers_preparing_redx_data <- function() {
         all.x = TRUE
     )
 
+    # export parquet
+    arrow::write_parquet(
+        redx_data_prep,
+        file.path(
+            config_paths()[["data_path"]],
+            "redx_data_prep.parquet"
+        )
+    )
+
     #--------------------------------------------------
     # merge both datasets
 
@@ -72,6 +76,15 @@ helpers_preparing_redx_data <- function() {
     redx_data_sf <- sf::st_set_geometry(
         redx_data_sf,
         redx_data_sf$geometry
+    )
+
+    # export
+    sf::st_write(
+        redx_data_sf,
+        file.path(
+            config_paths()[["data_path"]],
+            "redx_data_prep_sf.gpkg"
+        ),
     )
 
     #--------------------------------------------------
