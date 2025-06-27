@@ -2,3 +2,4 @@ config.R
 .Rproj.user
 *.Rproj
 .Rhistory
+debug.log
