@@ -10,3 +10,4 @@
 
 - other TODOs:
     - handle missings in city name for popup
+    - HK filter is not working
