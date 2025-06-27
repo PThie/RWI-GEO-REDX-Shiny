@@ -39,7 +39,7 @@ lapply(
 # read data
 
 # PUF RWI-GEO-REDX data
-redx_data <- helpers_preparing_redx_data()
+redx_data <- helpers_reading_prepared_redx()
 
 # Essen centroid coordinates
 essen_centroid_coords <- helpers_essen_centroid()
