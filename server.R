@@ -58,8 +58,14 @@ server <- function(input, output, session) {
                     "</div>",
                     "<hr style='margin: 4px 0;'/>",
                     "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                        "<p style = \"font-size:100%; color:grey; margin:0\">Value:</p>",
-                        "<p style = \"font-size:140%; margin:0;\">{scales::comma(round(get(var_of_interest()), 2))}</p>",
+                        "<p style = \"font-size:100%; color:grey; margin:0\">Price (&euro;/m&sup2;):</p>",
+                        "<p style = \"font-size:140%; margin:0;\">{
+                            ifelse(
+                                is.na(get(var_of_interest())),
+                                'No data',
+                                scales::comma(round(get(var_of_interest()), 2), accuracy = 0.01)
+                            )
+                        }</p>",
                     "</div>"
                 )
             )
@@ -117,7 +123,8 @@ server <- function(input, output, session) {
                 # fill layout of the grids
                 fillColor = pal(filtered_data[[var_name]]),
                 fillOpacity = 0.9,
-                popup = ~ popup_text
+                popup = ~ popup_text,
+                na.color = "#f0f0f0"
             ) |>
             # Overlay map labels on top
             leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronOnlyLabels) |>
@@ -125,7 +132,8 @@ server <- function(input, output, session) {
                 position = "bottomright",
                 pal = pal,
                 opacity = 0.9,
-                values = filtered_data[[var_name]]
+                values = filtered_data[[var_name]],
+                na.label = "No data"
             ) |>
             #--------------------------------------------------
             # add special features (fullscreen, search, reset)
