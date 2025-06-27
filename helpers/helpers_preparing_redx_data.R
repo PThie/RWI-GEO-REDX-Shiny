@@ -8,11 +8,6 @@ helpers_preparing_redx_data <- function() {
     #' @author Patrick Thiel
     
     #--------------------------------------------------
-    # source other files
-    
-    source("helpers/helpers_preparing_municipality_info.R")
-
-    #--------------------------------------------------
     # read data
 
     # PUF RWI-GEO-REDX data
@@ -25,7 +20,7 @@ helpers_preparing_redx_data <- function() {
                 "_PUF.xlsx"
             )
         ),
-        sheet = "Grids_RegionEff_yearly"
+        sheet = "Grids_RegionEff_abs_yearly"
     )
 
     # grid information
