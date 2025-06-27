@@ -59,7 +59,7 @@ server <- function(input, output, session) {
                     "<hr style='margin: 4px 0;'/>",
                     "<div style='width:250px; font-family:Calibri, sans-serif;'>",
                         "<p style = \"font-size:100%; color:grey; margin:0\">Value:</p>",
-                        "<p style = \"font-size:140%; margin:0;\">{scales::comma(get(var_of_interest()))}</p>",
+                        "<p style = \"font-size:140%; margin:0;\">{scales::comma(round(get(var_of_interest()), 2))}</p>",
                     "</div>"
                 )
             )
