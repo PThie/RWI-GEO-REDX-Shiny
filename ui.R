@@ -21,11 +21,10 @@ ui <- shinydashboard::dashboardPage(
             choices = list(
                 "House sales" = "HK",
                 "Apartment sales" = "WK",
-                "Apartment rents" = "WM",
-                "Combined" = "CI"
+                "Apartment rents" = "WM"
             ),
             # set default value
-            selected = "CI"
+            selected = "WM"
         ),
         selectInput(
             inputId = "select_year",
