@@ -1,8 +1,16 @@
-helpers_preparing_redx_data <- function(file_name = NA) {
+helpers_preparing_redx_data <- function(
+    file_name_abs = NA,
+    file_name_dev_abs = NA,
+    file_name_dev_perc = NA
+) {
     #' @title Preparing RWI-GEO-REDX data
     #' 
     #' @description This function reads the RWI-GEO-REDX data and prepares it
     #' for further plotting.
+    #' 
+    #' @param file_name_abs Name of the RWI-GEO-REDX data file (absolute values).
+    #' @param file_name_dev_abs Name of the RWI-GEO-REDX data file (absolute deviations).
+    #' @param file_name_dev_perc Name of the RWI-GEO-REDX data file (percent deviations).
     #' 
     #' @return Spatial dataframe with RWI-GEO-REDX data and grid information.
     #' @author Patrick Thiel
@@ -16,6 +24,28 @@ helpers_preparing_redx_data <- function(file_name = NA) {
             config_paths()[["data_path"]],
             paste0(
                 file_name,
+                ".parquet"
+            )
+        )
+    )
+
+    # REDX deviations (absolute)
+    redx_data_dev_abs <- arrow::read_parquet(
+        file.path(
+            config_paths()[["data_path"]],
+            paste0(
+                file_name_dev_abs,
+                ".parquet"
+            )
+        )
+    )
+
+    # REDX deviations (percent)
+    redx_data_dev_perc <- arrow::read_parquet(
+        file.path(
+            config_paths()[["data_path"]],
+            paste0(
+                file_name_dev_perc,
                 ".parquet"
             )
         )
@@ -56,7 +86,46 @@ helpers_preparing_redx_data <- function(file_name = NA) {
         all.x = TRUE
     )
 
+    #--------------------------------------------------
+    # clean deviations
+
+    redx_data_dev_abs_prep <- redx_data_dev_abs |>
+        dplyr::select(-dplyr::contains("NOBS"))
+
+    redx_data_dev_perc_prep <- redx_data_dev_perc |>
+        dplyr::select(-dplyr::contains("NOBS"))
+
+    # rename variables
+    names(redx_data_dev_abs_prep) <- c(
+        "grid",
+        "housing_type",
+        paste(names(redx_data_dev_abs_prep)[-c(1:2)], "dev_abs", sep = "_")
+    )
+
+    names(redx_data_dev_perc_prep) <- c(
+        "grid",
+        "housing_type",
+        paste(names(redx_data_dev_perc_prep)[-c(1:2)], "dev_perc", sep = "_")
+    )
+
+    #--------------------------------------------------
+    # merge deviations with main data
+
+    redx_data_prep <- redx_data_prep |>
+        merge(
+            redx_data_dev_abs_prep,
+            by = c("grid", "housing_type"),
+            all.x = TRUE
+        ) |>
+        merge(
+            redx_data_dev_perc_prep,
+            by = c("grid", "housing_type"),
+            all.x = TRUE
+        )
+
+    #--------------------------------------------------
     # export parquet
+
     arrow::write_parquet(
         redx_data_prep,
         file.path(
