@@ -95,6 +95,25 @@ server <- function(input, output, session) {
             domain = filtered_data[[var_name]]
         )
 
+        # define title for legend
+        if (unique(filtered_data[["housing_type"]]) == "WM") {
+            legend_title <- paste0(
+                "Rent (",
+                "\U20AC",
+                "/m",
+                "\u00B2",
+                ")"
+            )
+        } else {
+            legend_title <- paste0(
+                "Price (",
+                "\U20AC",
+                "/m",
+                "\u00B2",
+                ")"
+            )
+        }
+
         # for performance reasons, simplify the sf object
         # TODO: check if this is really needed
         simplified_sf <- rmapshaper::ms_simplify(
@@ -133,7 +152,8 @@ server <- function(input, output, session) {
                 pal = pal,
                 opacity = 0.9,
                 values = filtered_data[[var_name]],
-                na.label = "No data"
+                na.label = "No data",
+                title = legend_title
             ) |>
             #--------------------------------------------------
             # add special features (fullscreen, search, reset)
