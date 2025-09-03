@@ -3,11 +3,11 @@ server <- function(input, output, session) {
     # extract user input
 
     var_of_interest <- reactive({
-        req(input$select_year)
+        req(input$selected_year)
 
         var <- paste0(
             "pindex",
-            input$select_year
+            input$selected_year
         )
 
         var
@@ -18,15 +18,15 @@ server <- function(input, output, session) {
 
     housing_type_data <- reactive({
         req(
-            input$select_housing_type,
-            input$select_year,
+            input$selecteded_housing_type,
+            input$selected_year,
             var_of_interest()
         )
 
         # data preparation
         filtered <- redx_data |>
             dplyr::filter(
-                housing_type == input$select_housing_type
+                housing_type == input$selecteded_housing_type
             ) |>
             # TODO: DELETE LATER
             dplyr::filter(grid %in% c(

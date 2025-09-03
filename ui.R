@@ -16,7 +16,7 @@ ui <- shinydashboard::dashboardPage(
             )
         ),
         selectInput(
-            inputId = "select_housing_type",
+            inputId = "selecteded_housing_type",
             label = "Select housing type:",
             choices = list(
                 "House sales" = "HK",
@@ -27,7 +27,7 @@ ui <- shinydashboard::dashboardPage(
             selected = "WM"
         ),
         selectInput(
-            inputId = "select_year",
+            inputId = "selected_year",
             label = "Select year:",
             choices = seq(2008, config_globals()[["max_year"]], by = 1),
             # set default value
