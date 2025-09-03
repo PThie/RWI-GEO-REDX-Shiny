@@ -13,6 +13,30 @@ server <- function(input, output, session) {
         var
     })
 
+    var_deviation <- reactive({
+        req(input$selected_year)
+
+        var <- paste0(
+            "pindex",
+            input$selected_year,
+            "_dev_abs"
+        )
+
+        var
+    })
+
+    var_deviation_perc <- reactive({
+        req(input$selected_year)
+
+        var <- paste0(
+            "pindex",
+            input$selected_year,
+            "_dev_perc"
+        )
+
+        var
+    })
+
     #--------------------------------------------------
     # filter for housing type (choice of user)
 
@@ -20,8 +44,17 @@ server <- function(input, output, session) {
         req(
             input$selecteded_housing_type,
             input$selected_year,
-            var_of_interest()
+            var_of_interest(),
+            var_deviation(),
+            var_deviation_perc()
         )
+
+        # define label for price/ rent in popup
+        if (input$selecteded_housing_type == "WM") {
+            price_label <- "Rent"
+        } else {
+            price_label <- "Price"
+        }
 
         # data preparation
         filtered <- redx_data |>
@@ -29,41 +62,68 @@ server <- function(input, output, session) {
                 housing_type == input$selecteded_housing_type
             ) |>
             # TODO: DELETE LATER
-            dplyr::filter(grid %in% c(
-                "4110_3152",
-                "4110_3153",
-                "4111_3154",
-                "4112_3150",
-                "4112_3152",
-                "4113_3151",
-                "4113_3154",
-                "4114_3151",
-                "4114_3152",
-                "4114_3153",
-                "4115_3150"
-            )) |>
+            # dplyr::filter(grid %in% c(
+            #     "4110_3152",
+            #     "4110_3153",
+            #     "4111_3154",
+            #     "4112_3150",
+            #     "4112_3152",
+            #     "4113_3151",
+            #     "4113_3154",
+            #     "4114_3151",
+            #     "4114_3152",
+            #     "4114_3153",
+            #     "4115_3150"
+            # )) |>
+            dplyr::filter(
+                substring(AGS, 1, 2) %in% c("05", "06", "07")
+            ) |>
             dplyr::select(
                 grid,
                 housing_type,
                 city_name,
-                dplyr::all_of(var_of_interest())
+                dplyr::all_of(var_of_interest()),
+                dplyr::all_of(var_deviation()),
+                dplyr::all_of(var_deviation_perc())
             ) |>
             dplyr::mutate(
+                # add price label as column (needed for popup text)
+                price_label = price_label,
                 # define popup text
                 # TODO: handle NAs in city_name
                 popup_text = glue::glue(
                     "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                        "<p style = \"font-size:100%; color:grey; margin:0\">Grid in:</p>",
+                        "<p style = \"font-size:100%; color:grey; margin:0;\">Grid in:</p>",
                         "<p style = \"font-size:140%; margin:0;\">{city_name}</p>",
                     "</div>",
                     "<hr style='margin: 4px 0;'/>",
+                    # Price information
                     "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                        "<p style = \"font-size:100%; color:grey; margin:0\">Price (&euro;/m&sup2;):</p>",
+                        "<p style = \"font-size:100%; color:grey; margin:0;\">{price_label}</p>",
                         "<p style = \"font-size:140%; margin:0;\">{
                             ifelse(
                                 is.na(get(var_of_interest())),
                                 'No data',
-                                scales::comma(round(get(var_of_interest()), 2), accuracy = 0.01)
+                                paste0(
+                                    scales::comma(round(get(var_of_interest()), 2), accuracy = 0.01),
+                                    ' &euro;/m&sup2;'
+                                )
+                            )
+                        }</p>",
+                    "</div>",
+                    # Deviation information (absolute + percentage)
+                    "<div style='width:250px; font-family:Calibri, sans-serif;'>",
+                        "<p style = \"font-size:100%; color:grey; margin:0;\">Change rel. to German average:</p>",
+                        "<p style = \"font-size:140%; margin:0;\">{
+                            ifelse(
+                                is.na(get(var_deviation())),
+                                'No data',
+                                paste0(
+                                    scales::comma(round(get(var_deviation()), 2), accuracy = 0.01),
+                                    ' &euro;/m&sup2; (',
+                                    scales::comma(round(get(var_deviation_perc()), 2), accuracy = 0.01),
+                                    '%)'
+                                )
                             )
                         }</p>",
                     "</div>"
