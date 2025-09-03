@@ -1,4 +1,4 @@
-helpers_preparing_redx_data <- function() {
+helpers_preparing_redx_data <- function(file_name = NA) {
     #' @title Preparing RWI-GEO-REDX data
     #' 
     #' @description This function reads the RWI-GEO-REDX data and prepares it
@@ -14,7 +14,10 @@ helpers_preparing_redx_data <- function() {
     redx_data <- arrow::read_parquet(
         file.path(
             config_paths()[["data_path"]],
-            "redx_data_puf.parquet"
+            paste0(
+                file_name,
+                ".parquet"
+            )
         )
     )
 
@@ -85,6 +88,7 @@ helpers_preparing_redx_data <- function() {
             config_paths()[["data_path"]],
             "redx_data_prep_sf.gpkg"
         ),
+        append = FALSE
     )
 
     #--------------------------------------------------
