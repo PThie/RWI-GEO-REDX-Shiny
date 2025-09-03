@@ -1,0 +1,38 @@
+div.outer {
+    position: fixed;
+    top: 41px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* Position and style of data source citation */
+#cite {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 12px;
+}
+
+#options-map {
+  /* Appearance */
+    background-color: white;
+    padding: 0 20px 20px 20px;
+    cursor: move;
+    /* Fade out while not hovering */
+    opacity: 0.65;
+    zoom: 0.9;
+    transition: opacity 500ms 1s;
+}
+
+#options-map:hover {
+    /* Fade in while hovering */
+    opacity: 0.95;
+    transition-delay: 0;
+}
+
+.leaflet .legend i {
+    height: auto;
+}
