@@ -19,6 +19,13 @@ helpers_reading_prepared_redx <- function() {
     )
 
     #--------------------------------------------------
+    # adjust geometry column name
+
+    if ("geom" %in% names(redx_data)) {
+        sf::st_geometry(redx_data) <- "geometry"
+    }
+
+    #--------------------------------------------------
     # return
 
     return(redx_data)
