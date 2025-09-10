@@ -11,14 +11,14 @@ helpers_preparing_municipality_info <- function() {
     # read data
 
     # combination between municipalities and grids
-    grids_munic <- data.table::fread(
+    suppressWarnings(grids_munic <- data.table::fread(
         file.path(
             config_paths()[["gebiete_path"]],
             "Zuordnung",
             "Raster_Gemeinde",
             "2019_Grids_Municipality_Exact_unambiguous.csv"
         )
-    )
+    ))
 
     # municipality information
     munics_sf <- sf::st_read(
