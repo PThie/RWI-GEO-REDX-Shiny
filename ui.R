@@ -115,7 +115,7 @@ ui <- shiny::navbarPage(
                 # set default value
                 selected = "WM"
             ),
-            h3("Input your factors and calculate your rent/price"),
+            h3("Input the attributes for your desired property"),
             bslib::accordion(
                 id = "collapseAttributes",
                 #--------------------------------------------------
@@ -131,7 +131,7 @@ ui <- shiny::navbarPage(
                         bslib::layout_columns(
                             selectInput(
                                 inputId = "selected_construction_year_WK",
-                                label = shiny::HTML("<b>Construction year (category):</b>"),
+                                label = shiny::HTML("<b>Construction year:</b>"),
                                 choices = list(
                                     # NOTE: 1 is reference category
                                     "Before 1900" = "2",
@@ -148,7 +148,7 @@ ui <- shiny::navbarPage(
                             ),
                             selectInput(
                                 inputId = "selected_endowment_WK",
-                                label = shiny::HTML("<b>Endowment (category):</b>"),
+                                label = shiny::HTML("<b>Endowment:</b>"),
                                 choices = list(
                                     "Simple" = "1",
                                     "Normal" = "2",
@@ -168,7 +168,7 @@ ui <- shiny::navbarPage(
                             ),
                             selectInput(
                                 inputId = "selected_floor_WK",
-                                label = shiny::HTML("<b>Floor (category):</b>"),
+                                label = shiny::HTML("<b>Floor:</b>"),
                                 choices = list(
                                     "Groundfloor" = "1",
                                     "1st floor" = "2",
@@ -189,7 +189,7 @@ ui <- shiny::navbarPage(
                         bslib::layout_columns(
                             selectInput(
                                 inputId = "selected_construction_year_HK",
-                                label = shiny::HTML("<b>Construction year (category):</b>"),
+                                label = shiny::HTML("<b>Construction year:</b>"),
                                 choices = list(
                                     # NOTE: 1 is reference category
                                     "Before 1900" = "2",
@@ -203,6 +203,87 @@ ui <- shiny::navbarPage(
                                     "2010 and later" = "10"
                                 ),
                                 selected = "10"
+                            ),
+                            selectInput(
+                                inputId = "selected_endowment_HK",
+                                label = shiny::HTML("<b>Endowment:</b>"),
+                                choices = list(
+                                    "Simple" = "1",
+                                    "Normal" = "2",
+                                    "Sophisticated" = "3",
+                                    "Deluxe" = "4"
+                                ),
+                                selected = "2"
+                            )
+                        ),
+                        bslib::layout_columns(
+                            sliderInput(
+                                inputId = "selected_numrooms_HK",
+                                label = shiny::HTML("<b>Number of rooms:</b>"),
+                                min = 1,
+                                max = 15,
+                                value = 3
+                            ),
+                            selectInput(
+                                inputId = "selected_plot_area_HK",
+                                label = shiny::HTML("<b>Plot area in m<sup>2</sup>:</b>"),
+                                choices = list(
+                                    "0-200" = "1",
+                                    "201-400" = "2",
+                                    "401-600" = "3",
+                                    "601-800" = "4",
+                                    "801-1000" = "5",
+                                    # NOTE: Technically category 6 is 1200 and above
+                                    # So 1000-1200 is missing
+                                    # TODO: Stick with 1001+ to avoid confusion for now
+                                    "1001 and more" = "6"
+                                )
+                            )
+                        )
+                    ),
+                    #--------------------------------------------------
+                    # Primary characteristics for WM
+                    #--------------------------------------------------
+                    # TODO:
+                    shiny::conditionalPanel(
+                        condition = "input.selected_housing_type_builder == 'WM'",
+                        bslib::layout_columns(
+                            selectInput(
+                                inputId = "selected_construction_year_WM",
+                                label = shiny::HTML("<b>Construction year:</b>"),
+                                choices = list(
+                                    # NOTE: 1 is reference category
+                                    "Before 1900" = "2",
+                                    "1900-1944" = "3",
+                                    "1945-1959" = "4",
+                                    "1960-1969" = "5",
+                                    "1970-1979" = "6",
+                                    "1980-1989" = "7",
+                                    "1990-1999" = "8",
+                                    "2000-2009" = "9",
+                                    "2010 and later" = "10"
+                                ),
+                                selected = "10"
+                            ),
+                            selectInput(
+                                inputId = "selected_endowment_WM",
+                                label = shiny::HTML("<b>Endowment:</b>"),
+                                choices = list(
+                                    "Simple" = "1",
+                                    "Normal" = "2",
+                                    "Sophisticated" = "3",
+                                    "Deluxe" = "4"
+                                ),
+                                selected = "2"
+                            )
+                        ),
+                        bslib::layout_columns(
+                            sliderInput(
+                                inputId = "selected_numrooms_WM",
+                                label = shiny::HTML("<b>Number of rooms:</b>"),
+                                min = 1,
+                                max = 7,
+                                value = 3
                             )
                         )
                     )
@@ -212,6 +293,9 @@ ui <- shiny::navbarPage(
                 #--------------------------------------------------
                 bslib::accordion_panel(
                     title = "Secondary Housing Characteristics",
+                    #--------------------------------------------------
+                    # Secondary characteristics for WK
+                    #--------------------------------------------------
                     shiny::conditionalPanel(
                         condition = "input.selected_housing_type_builder == 'WK'",
                         bslib::layout_columns(
@@ -293,7 +377,7 @@ ui <- shiny::navbarPage(
                             ),
                             selectInput(
                                 inputId = "selected_num_floors_WK",
-                                label = shiny::HTML("<b>Total number of floors (category):</b>"),
+                                label = shiny::HTML("<b>Total number of floors:</b>"),
                                 choices = list(
                                     "1-3 floors" = "2",
                                     "4-5 floors" = "3",
@@ -303,76 +387,175 @@ ui <- shiny::navbarPage(
                                 selected = "2"
                             )
                         )
+                    ),
+                    #--------------------------------------------------
+                    # Secondary characteristics for HK
+                    #--------------------------------------------------
+                    shiny::conditionalPanel(
+                        condition = "input.selected_housing_type_builder == 'HK'",
+                        bslib::layout_columns(
+                            radioButtons(
+                                inputId = "selected_occupancy_HK",
+                                label = shiny::HTML("<b>First occupancy?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_guestwc_HK",
+                                label = shiny::HTML("<b>Guest Bathroom?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_grannyflat_HK",
+                                label = shiny::HTML("<b>Granny flat?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            )
+                        ),
+                        bslib::layout_columns(
+                            radioButtons(
+                                inputId = "selected_detached_HK", # freistehend (cats 1, 7, 8)
+                                label = shiny::HTML("<b>Detached house?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_semidetached_HK", # DHH (cats 2, 3)
+                                label = shiny::HTML("<b>Semi-detached house?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_terraced_HK", # Reihenhaus (cats 4, 5, 6)
+                                label = shiny::HTML("<b>Terraced house?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            )
+                        ),
+                        bslib::layout_columns(
+                            radioButtons(
+                                inputId = "selected_exclusive_HK", # (cats 9, 10)
+                                label = shiny::HTML("<b>Exclusive house (castle/ mansion)?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_mfh_HK", # (cats 11, 12)
+                                label = shiny::HTML("<b>Multi-family house?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_other_HK", # (cats 13, 14, 15)
+                                label = shiny::HTML("<b>Other type?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            )
+                        )
+                    ),
+                    #--------------------------------------------------
+                    # Secondary characteristics for WM
+                    #--------------------------------------------------
+                    shiny::conditionalPanel(
+                        condition = "input.selected_housing_type_builder == 'WM'",
+                        bslib::layout_columns(
+                            radioButtons(
+                                inputId = "selected_balcony_WM",
+                                label = shiny::HTML("<b>Balcony?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_garden_WM",
+                                label = shiny::HTML("<b>Garden?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_basement_WM",
+                                label = shiny::HTML("<b>Basement?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            )
+                        ),
+                        bslib::layout_columns(
+                            radioButtons(
+                                inputId = "selected_occupancy_WM",
+                                label = shiny::HTML("<b>First occupancy?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_built_in_kitchen_WM",
+                                label = shiny::HTML("<b>Built-in kitchen?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            ),
+                            radioButtons(
+                                inputId = "selected_guestwc_WM",
+                                label = shiny::HTML("<b>Guest Bathroom?</b>"),
+                                choices = list(
+                                    "Yes" = "1",
+                                    "No" = "0"
+                                ),
+                                selected = "0"
+                            )
+                        )
                     )
                 )
-            )
+            ),
+            h3("Select your city"),
+            # TODO: handle aggregated FE, allow user to search for city
+            h3("Hedonic Value Output")
+            # TODO: Button to run?
         )
     )
 )
 
 
-                            # radioButtons(
-                            #     inputId = "selected_grannyflat_WK",
-                            #     label = "Granny flat?",
-                            #     choices = list(
-                            #         "Yes" = "1",
-                            #         "No" = "0"
-                            #     ),
-                            #     selected = "0"
-                            # ),
 
-# radioButtons(
-#                             inputId = "selected_detached",
-#                             label = "Detached house?",
-#                             choices = list(
-#                                 "Yes" = "yes",
-#                                 "No" = "no"
-#                             ),
-#                             selected = "no"
-#                         ),
-#                         radioButtons(
-#                             inputId = "selected_semidetached",
-#                             label = "Semi-detached house?",
-#                             choices = list(
-#                                 "Yes" = "yes",
-#                                 "No" = "no"
-#                             ),
-#                             selected = "no"
-#                         ),
-#                         radioButtons(
-#                             inputId = "selected_terraced",
-#                             label = "Terraced house?",
-#                             choices = list(
-#                                 "Yes" = "yes",
-#                                 "No" = "no"
-#                             ),
-#                             selected = "no"
-#                         ),
-#                         # TODO: check what type this is
-#                         radioButtons(
-#                             inputId = "selected_exclusive",
-#                             label = "Exclusive house?",
-#                             choices = list(
-#                                 "Yes" = "yes",
-#                                 "No" = "no"
-#                             ),
-#                             selected = "no"
-#                         ),
-#                         radioButtons(
-#                             inputId = "selected_mfh",
-#                             label = "Multi-family house?",
-#                             choices = list(
-#                                 "Yes" = "yes",
-#                                 "No" = "no"
-#                             ),
-#                             selected = "no"
-#                         ),
-#                         radioButtons(
-#                             inputId = "selected_other",
-#                             label = "Other?",
-#                             choices = list(
-#                                 "Yes" = "yes",
-#                                 "No" = "no"
-#                             ),
-#                             selected = "no"
-#                         )
+
+
