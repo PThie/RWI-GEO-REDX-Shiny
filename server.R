@@ -42,7 +42,7 @@ server <- function(input, output, session) {
 
     housing_type_data <- reactive({
         req(
-            input$selecteded_housing_type,
+            input$selected_housing_type,
             input$selected_year,
             var_of_interest(),
             var_deviation(),
@@ -50,7 +50,7 @@ server <- function(input, output, session) {
         )
 
         # define label for price/ rent in popup
-        if (input$selecteded_housing_type == "WM") {
+        if (input$selected_housing_type == "WM") {
             price_label <- "Rent"
         } else {
             price_label <- "Price"
@@ -59,8 +59,11 @@ server <- function(input, output, session) {
         # data preparation
         filtered <- redx_data |>
             dplyr::filter(
-                housing_type == input$selecteded_housing_type
+                housing_type == input$selected_housing_type
             ) |>
+            # TODO: Check if that affects many grids/ munics
+            dplyr::filter(!is.na(grid)) |>
+            dplyr::filter(!is.na(AGS)) |>
             # TODO: DELETE LATER
             # dplyr::filter(grid %in% c(
             #     "4110_3152",
@@ -75,9 +78,13 @@ server <- function(input, output, session) {
             #     "4114_3153",
             #     "4115_3150"
             # )) |>
-            dplyr::filter(
-                substring(AGS, 1, 2) %in% c("05", "06", "07")
-            ) |>
+            # dplyr::filter(
+            #     substring(AGS, 1, 3) == "051"
+            # ) |>
+            # dplyr::filter(city_name == "Essen") |>
+            # dplyr::filter(
+            #     substring(AGS, 1, 2) %in% c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16")
+            # ) |>
             dplyr::select(
                 grid,
                 housing_type,
@@ -149,10 +156,16 @@ server <- function(input, output, session) {
         filtered_data <- housing_type_data()
         var_name <- var_of_interest()
 
+        # retrieve values
+        vals <- filtered_data[[var_name]]
+        non_missing_vals <- vals[!is.na(vals)]
+
         # define color palette
         pal <- leaflet::colorNumeric(
             palette = "plasma",
-            domain = filtered_data[[var_name]]
+            # domain = filtered_data[[var_name]][!is.na(filtered_data[[var_name]])],
+            domain = non_missing_vals,
+            na.color = "#DBDBDB"
         )
 
         # define title for legend
@@ -193,35 +206,45 @@ server <- function(input, output, session) {
                 zoom = 12
             ) |>
             leafgl::addGlPolygons(
-                data = filtered_data,
-                #--------------------------------------------------
-                # border layout of the grids
-                color = "transparent", # border color
-                weight = 0, # border thickness
+                data = filtered_data
+                    # NOTE: Remove this line if you want to show "No data"
+                    |> dplyr::filter(!is.na(get(var_name))),
                 #--------------------------------------------------
                 # fill layout of the grids
-                fillColor = pal(filtered_data[[var_name]]),
+                # fillColor = pal(vals),
+                # USE previous line if you want to show "No data"
+                fillColor = pal(non_missing_vals),
                 fillOpacity = 0.9,
-                popup = ~ popup_text,
-                na.color = "#f0f0f0"
+                popup = ~ popup_text
             ) |>
             # Overlay map labels on top
             leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronOnlyLabels) |>
+            # NOTE: two legends to place the "No data" legend below the coloring
+            # legend. Having all in one caused the problem that for rents the
+            # "no data" label appeared right to the numbers (instead of below).
+            # TODO: add option to show/hide "No data" legend
+            # leaflet::addLegend(
+            #     position  = "bottomright",
+            #     colors    = "#DBDBDB",
+            #     labels    = "No data",
+            #     opacity   = 0.9,
+            #     title     = NULL,
+            # ) |>
             leaflet::addLegend(
                 position = "bottomright",
                 pal = pal,
                 opacity = 0.9,
-                values = filtered_data[[var_name]],
-                na.label = "No data",
-                title = legend_title
+                values = non_missing_vals,
+                title = legend_title,
+                na.label = NA
             ) |>
             #--------------------------------------------------
             # add special features (fullscreen, search, reset)
             leaflet.extras::addFullscreenControl() |>
             leaflet.extras::addSearchOSM(
                 options = leaflet.extras::searchOptions(
-                    zoom = 13,
-                    autoCollapse = TRUE,
+                    zoom = 15,
+                    autoCollapse = FALSE,
                     hideMarkerOnCollapse = TRUE
                 )
             ) |>
