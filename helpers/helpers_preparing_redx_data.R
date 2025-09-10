@@ -124,6 +124,12 @@ helpers_preparing_redx_data <- function(
         )
 
     #--------------------------------------------------
+    # remove weighted mean rows
+
+    redx_data_prep <- redx_data_prep |>
+        dplyr::filter(grid != "Weighted Mean")
+
+    #--------------------------------------------------
     # export parquet
 
     arrow::write_parquet(
