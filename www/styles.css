@@ -1,6 +1,6 @@
 div.outer {
     position: fixed;
-    top: 41px;
+    top: 56px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -33,6 +33,13 @@ div.outer {
     transition-delay: 0;
 }
 
-.leaflet .legend i {
-    height: auto;
+/* info color */
+.btn-info {
+    /* background-color: #009dd0; */
+    border: none;
+    color: #007aa6;
+}
+
+.btn-info:hover {
+    background-color: #007aa6;
 }
