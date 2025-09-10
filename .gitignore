@@ -3,3 +3,4 @@ config.R
 *.Rproj
 .Rhistory
 debug.log
+/data
