@@ -17,6 +17,8 @@ suppressPackageStartupMessages({
     library(rmapshaper)
     library(stringr)
     library(glue)
+    library(shinyBS)
+    library(bslib)
 })
 
 #--------------------------------------------------
@@ -43,3 +45,10 @@ redx_data <- helpers_reading_prepared_redx()
 
 # Essen centroid coordinates
 essen_centroid_coords <- helpers_essen_centroid()
+
+# Model information
+hedonic_model_coefs <- helpers_reading_model_coefs()
+smearing_factors <- helpers_reading_smearing_factors()
+
+#--------------------------------------------------
+message("loaded global.R")
