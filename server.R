@@ -1,9 +1,13 @@
 server <- function(input, output, session) {
     #--------------------------------------------------
+    # INTERACTIVE MAP tab
+    #--------------------------------------------------
+
+    #--------------------------------------------------
     # extract user input
 
     var_of_interest <- reactive({
-        req(input$selected_year)
+        shiny::req(input$selected_year)
 
         var <- paste0(
             "pindex",
@@ -14,7 +18,7 @@ server <- function(input, output, session) {
     })
 
     var_deviation <- reactive({
-        req(input$selected_year)
+        shiny::req(input$selected_year)
 
         var <- paste0(
             "pindex",
@@ -26,7 +30,7 @@ server <- function(input, output, session) {
     })
 
     var_deviation_perc <- reactive({
-        req(input$selected_year)
+        shiny::req(input$selected_year)
 
         var <- paste0(
             "pindex",
@@ -41,7 +45,7 @@ server <- function(input, output, session) {
     # filter for housing type (choice of user)
 
     housing_type_data <- reactive({
-        req(
+        shiny::req(
             input$selected_housing_type,
             input$selected_year,
             var_of_interest(),
@@ -140,14 +144,12 @@ server <- function(input, output, session) {
         filtered
     })
 
-    # output$tst <- renderTable({housing_type_data()})
-
     #--------------------------------------------------
     # create map
     # NOTE: for background maps check: https://leaflet-extras.github.io/leaflet-providers/preview/
 
     output$map <- leaflet::renderLeaflet({
-        req(
+        shiny::req(
             housing_type_data(),
             var_of_interest()
         )
@@ -250,6 +252,101 @@ server <- function(input, output, session) {
             ) |>
             leaflet.extras::addResetMapButton()
     })
+
+    #--------------------------------------------------
+    # BUILD YOUR RENT tab
+    #--------------------------------------------------
+
+    coefficients <- reactive({
+        shiny::req(
+            input$selected_housing_type_builder,
+            # shared characteristics across all housing types
+            input$selected_endowment,
+            input$selected_construction_year,
+            input$selected_occupancy,
+            input$selected_guestwc,
+            input$selected_numrooms,
+            # characteristics specific to housing type
+            input$selected_elevator,
+            input$selected_balcony,
+            input$selected_wohngeld,
+            input$selected_built_in_kitchen,
+            input$selected_floor,
+            input$selected_garden,
+            input$selected_basement,
+            input$selected_num_floors,
+            input$selected_grannyflat,
+            input$selected_plot_area,
+            input$selected_semidetached,
+            input$selected_mfh,
+            input$selected_terraced,
+            input$selected_exclusive,
+            input$selected_detached,
+            input$selected_other
+        )
+
+        # filter coefficients for housing type
+        filtered_coefs_housing_type <- hedonic_model_coefs |>
+            dplyr::filter(
+                housing_type == input$selected_housing_type_builder
+            )
+
+        # filter for shared characteristics across all housing types
+        filtered_coefs_shared <- filtered_coefs_housing_type |>
+            dplyr::filter(
+                (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment)) |
+                (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year)) |
+                (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy)) |
+                (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc)) |
+                (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms))
+            )
+
+        # filter for characteristics specific to housing type
+        if (input$selected_housing_type_builder == "WM") {
+            filtered_coefs_specific <- filtered_coefs_housing_type |>
+                dplyr::filter(
+                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony)) |
+                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen)) |
+                    (var_name == "garten" & org_cat == as.integer(input$selected_garden)) |
+                    (var_name == "keller" & org_cat == as.integer(input$selected_basement))
+                )
+        } else if (input$selected_housing_type_builder == "WK") {
+            filtered_coefs_specific <- filtered_coefs_housing_type |>
+                dplyr::filter(
+                    (var_name == "aufzug" & org_cat == as.integer(input$selected_elevator)) |
+                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony)) |
+                    (var_name == "declared_wohngeld" & org_cat == as.integer(input$selected_wohngeld)) |
+                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen)) |
+                    (var_name == "floors_cat" & org_cat == as.integer(input$selected_floor)) |
+                    (var_name == "garten" & org_cat == as.integer(input$selected_garden)) |
+                    (var_name == "keller" & org_cat == as.integer(input$selected_basement)) |
+                    (var_name == "num_floors_cat" & org_cat == as.integer(input$selected_num_floors))
+                )
+        } else {
+            filtered_coefs_specific <- filtered_coefs_housing_type |>
+                dplyr::filter(
+                    (var_name == "einliegerwohnung" & org_cat == as.integer(input$selected_grannyflat)) |
+                    (var_name == "plot_area_cat" & org_cat == as.integer(input$selected_plot_area)) |
+                    (var_name == "typ_DHH" & org_cat == as.integer(input$selected_semidetached)) |
+                    (var_name == "typ_MFH" & org_cat == as.integer(input$selected_mfh)) |
+                    (var_name == "typ_Reihenhaus" & org_cat == as.integer(input$selected_terraced)) |
+                    (var_name == "typ_exclusive" & org_cat == as.integer(input$selected_exclusive)) |
+                    (var_name == "typ_freistehend" & org_cat == as.integer(input$selected_detached)) |
+                    (var_name == "typ_other" & org_cat == as.integer(input$selected_other))
+                )
+        }
+
+        # combine both dataframes
+        filtered_coefs <- rbind(
+            filtered_coefs_shared,
+            filtered_coefs_specific
+        )
+
+        # return
+        filtered_coefs
+    })
+
+    output$coefficients <- renderTable({coefficients()})
 
 
 }
