@@ -142,7 +142,10 @@ server <- function(input, output, session) {
             )
 
         filtered
-    })
+    }) |> shiny::bindCache(
+        input$selected_housing_type,
+        input$selected_year
+    )
 
     #--------------------------------------------------
     # create map
