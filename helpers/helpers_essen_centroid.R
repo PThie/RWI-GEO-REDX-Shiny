@@ -47,15 +47,24 @@ helpers_essen_centroid <- function() {
     essen_centroid <- sf::st_centroid(essen)
 
     # extract coordinates
-    essen_centroid_coords <- sf::st_coordinates(essen_centroid) |>
-        as.data.frame() |>
-        dplyr::rename(
-            lon = X,
-            lat = Y
-        )
+    suppressWarnings(
+        essen_centroid_coords <- sf::st_coordinates(essen_centroid) |>
+            as.data.frame() |>
+            dplyr::rename(
+                lon = X,
+                lat = Y
+            )
+    )
 
     #--------------------------------------------------
-    # return
+    # export
 
-    return(essen_centroid_coords)
+    data.table::fwrite(
+        essen_centroid_coords,
+        file.path(
+            config_paths()[["data_path"]],
+            "essen_centroid_coords.csv"
+        ),
+        row.names = FALSE
+    )
 }
