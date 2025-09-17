@@ -60,86 +60,71 @@ server <- function(input, output, session) {
             price_label <- "Price"
         }
 
-        # data preparation
-        filtered <- redx_data |>
-            dplyr::filter(
-                housing_type == input$selected_housing_type
-            ) |>
-            # TODO: Check if that affects many grids/ munics
-            dplyr::filter(!is.na(grid)) |>
-            dplyr::filter(!is.na(AGS)) |>
-            # TODO: DELETE LATER
-            # dplyr::filter(grid %in% c(
-            #     "4110_3152",
-            #     "4110_3153",
-            #     "4111_3154",
-            #     "4112_3150",
-            #     "4112_3152",
-            #     "4113_3151",
-            #     "4113_3154",
-            #     "4114_3151",
-            #     "4114_3152",
-            #     "4114_3153",
-            #     "4115_3150"
-            # )) |>
-            # dplyr::filter(
-            #     substring(AGS, 1, 3) == "051"
-            # ) |>
-            # dplyr::filter(city_name == "Essen") |>
-            # dplyr::filter(
-            #     substring(AGS, 1, 2) %in% c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16")
-            # ) |>
-            dplyr::select(
-                grid,
-                housing_type,
-                city_name,
-                dplyr::all_of(var_of_interest()),
-                dplyr::all_of(var_deviation()),
-                dplyr::all_of(var_deviation_perc())
-            ) |>
-            dplyr::mutate(
-                # add price label as column (needed for popup text)
-                price_label = price_label,
-                # define popup text
-                # TODO: handle NAs in city_name
-                popup_text = as.character(glue::glue(
-                    "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                        "<p style = \"font-size:100%; color:grey; margin:0;\">Grid in:</p>",
-                        "<p style = \"font-size:140%; margin:0;\">{city_name}</p>",
-                    "</div>",
-                    "<hr style='margin: 4px 0;'/>",
-                    # Price information
-                    "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                        "<p style = \"font-size:100%; color:grey; margin:0;\">{price_label}</p>",
-                        "<p style = \"font-size:140%; margin:0;\">{
-                            ifelse(
-                                is.na(get(var_of_interest())),
-                                'No data',
-                                paste0(
-                                    scales::comma(round(get(var_of_interest()), 2), accuracy = 0.01),
-                                    ' &euro;/m&sup2;'
-                                )
-                            )
-                        }</p>",
-                    "</div>",
-                    # Deviation information (absolute + percentage)
-                    "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                        "<p style = \"font-size:100%; color:grey; margin:0;\">Change rel. to German average:</p>",
-                        "<p style = \"font-size:140%; margin:0;\">{
-                            ifelse(
-                                is.na(get(var_deviation())),
-                                'No data',
-                                paste0(
-                                    scales::comma(round(get(var_deviation()), 2), accuracy = 0.01),
-                                    ' &euro;/m&sup2; (',
-                                    scales::comma(round(get(var_deviation_perc()), 2), accuracy = 0.01),
-                                    '%)'
-                                )
-                            )
-                        }</p>",
-                    "</div>"
-                ))
+        # define columns
+        vi  <- var_of_interest()
+        vd  <- var_deviation()
+        vdp <- var_deviation_perc()
+
+        cols <- c("grid", "housing_type", "city_name", vi, vd, vdp, "geometry")
+
+        # filter data to selection
+        filtered <- redx_data[
+            housing_type == input$selected_housing_type,
+            ..cols
+        ]
+
+        # add legend output
+        filtered[, price_fmt :=
+            fifelse(
+                is.na(get(vi)),
+                "No data",
+                paste0(
+                    scales::comma(
+                        round(get(vi), 2),
+                        accuracy = 0.01
+                    ),
+                    " &euro;/m&sup2;"
+                )
             )
+        ]
+
+
+        filtered[, dev_fmt :=
+            fifelse(
+                is.na(get(vd)),
+                "No data",
+                paste0(
+                    scales::comma(
+                        round(get(vd), 2),
+                        accuracy = 0.01
+                    ),
+                    " &euro;/m&sup2; (",
+                    scales::comma(round(get(vdp), 2), accuracy = 0.01),
+                    "%)"
+                )
+            )
+        ]
+
+        # add price label for popup
+        filtered[, price_label := price_label]
+
+        # define popup text
+        filtered[, popup_text := glue::glue_data(
+            .SD,
+            "<div style='width:250px; font-family:Calibri, sans-serif;'>",
+                "<p style='font-size:100%; color:grey; margin:0;'>Grid in:</p>",
+                "<p style='font-size:140%; margin:0;'>{city_name}</p>",
+            "</div>",
+            "<hr style='margin:4px 0;'/>",
+            "<div style='width:250px; font-family:Calibri, sans-serif;'>",
+                "<p style='font-size:100%; color:grey; margin:0;'>{price_label}</p>",
+                "<p style='font-size:140%; margin:0;'>{price_fmt}</p>",
+            "</div>",
+            "<div style='width:250px; font-family:Calibri, sans-serif;'>",
+                "<p style='font-size:100%; color:grey; margin:0;'>Change rel. to German average:</p>",
+                "<p style='font-size:140%; margin:0;'>{dev_fmt}</p>",
+            "</div>"
+        ), by = 1:nrow(filtered)]
 
         filtered
     }) |> shiny::bindCache(
@@ -159,6 +144,10 @@ server <- function(input, output, session) {
 
         # retrieve needed information
         filtered_data <- housing_type_data()
+        filtered_data <- sf::st_set_geometry(
+            filtered_data,
+            "geometry"
+        )
         var_name <- var_of_interest()
 
         # retrieve values
