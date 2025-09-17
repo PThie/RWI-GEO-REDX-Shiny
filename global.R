@@ -49,6 +49,10 @@ max_year <- 2024
 
 # PUF RWI-GEO-REDX data
 redx_data <- helpers_reading_prepared_redx()
+data.table::setDT(redx_data)
+
+# remove rows with NA grid / AGS only once
+redx_data <- redx_data[!is.na(grid) & !is.na(AGS)]
 
 # Essen centroid
 essen_centroid_coords <- data.table::fread(
