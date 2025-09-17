@@ -95,7 +95,6 @@ ui <- shiny::navbarPage(
     #--------------------------------------------------
     # BUILD YOUR RENT tab
     #--------------------------------------------------
-    # TODO: Inputs need to change according to model/ housing type
     shiny::tabPanel(
         title = "Build Your Rent",
         div(
@@ -244,7 +243,6 @@ ui <- shiny::navbarPage(
                     #--------------------------------------------------
                     # Primary characteristics for WM
                     #--------------------------------------------------
-                    # TODO:
                     shiny::conditionalPanel(
                         condition = "input.selected_housing_type_builder == 'WM'",
                         bslib::layout_columns(
@@ -329,7 +327,7 @@ ui <- shiny::navbarPage(
                         ),
                         bslib::layout_columns(
                             radioButtons(
-                                inputId = "selected_balcony_WK",
+                                inputId = "selected_balcony_WK_WK",
                                 label = shiny::HTML("<b>Balcony?</b>"),
                                 choices = list(
                                     "Yes" = "1",
@@ -358,7 +356,7 @@ ui <- shiny::navbarPage(
                         ),
                         bslib::layout_columns(
                             radioButtons(
-                                inputId = "selected_wohngeld_wk",
+                                inputId = "selected_wohngeld_WK",
                                 label = shiny::HTML("<b>Eligible for housing allowance (Wohngeld)?</b>"),
                                 choices = list(
                                     "Yes" = "1",
@@ -549,8 +547,10 @@ ui <- shiny::navbarPage(
             ),
             h3("Select your city"),
             # TODO: handle aggregated FE, allow user to search for city
-            h3("Hedonic Value Output")
+            h3("Hedonic Value Output"),
             # TODO: Button to run?
+            tableOutput("coefficients"),
+            textOutput("total_effect")
         )
     )
 )
