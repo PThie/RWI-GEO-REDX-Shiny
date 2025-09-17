@@ -47,9 +47,9 @@ ui <- shiny::navbarPage(
                 selectInput(
                     inputId = "selected_year",
                     label = "Select year:",
-                    choices = seq(2008, config_globals()[["max_year"]], by = 1),
+                    choices = seq(2008, max_year, by = 1),
                     # set default value
-                    selected = config_globals()[["max_year"]]
+                    selected = max_year
                 )
             )
         ),
