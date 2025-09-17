@@ -17,6 +17,9 @@ helpers_reading_smearing_factors <- function() {
         )
     )
 
+    # set as data.table
+    data.table::setDT(smearing_factors)
+
     #--------------------------------------------------
     # return
 

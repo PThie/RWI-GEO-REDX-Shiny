@@ -17,6 +17,9 @@ helpers_reading_model_coefs <- function() {
         )
     )
 
+    # set as data.table
+    data.table::setDT(model)
+
     #--------------------------------------------------
     # return
 
