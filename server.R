@@ -108,23 +108,28 @@ server <- function(input, output, session) {
         # add price label for popup
         filtered[, price_label := price_label]
 
-        # define popup text
-        filtered[, popup_text := glue::glue_data(
-            .SD,
+        # create popup text
+        filtered[, popup_text :=
+            paste0(
             "<div style='width:250px; font-family:Calibri, sans-serif;'>",
                 "<p style='font-size:100%; color:grey; margin:0;'>Grid in:</p>",
-                "<p style='font-size:140%; margin:0;'>{city_name}</p>",
+                "<p style='font-size:140%; margin:0;'>", city_name, "</p>",
             "</div>",
             "<hr style='margin:4px 0;'/>",
             "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                "<p style='font-size:100%; color:grey; margin:0;'>{price_label}</p>",
-                "<p style='font-size:140%; margin:0;'>{price_fmt}</p>",
+                "<p style='font-size:100%; color:grey; margin:0;'>", price_label, "</p>",
+                "<p style='font-size:140%; margin:0;'>", price_fmt, "</p>",
             "</div>",
             "<div style='width:250px; font-family:Calibri, sans-serif;'>",
                 "<p style='font-size:100%; color:grey; margin:0;'>Change rel. to German average:</p>",
-                "<p style='font-size:140%; margin:0;'>{dev_fmt}</p>",
+                "<p style='font-size:140%; margin:0;'>", dev_fmt, "</p>",
             "</div>"
-        ), by = 1:nrow(filtered)]
+            )
+        ]
+
+        # remove grids with no data for this years
+        # NOTE: Remove this line if you want to show "No data"
+        filtered <- filtered[!is.na(get(vi))]
 
         filtered
     }) |> shiny::bindCache(
@@ -181,14 +186,6 @@ server <- function(input, output, session) {
             )
         }
 
-        # for performance reasons, simplify the sf object
-        # TODO: check if this is really needed
-        simplified_sf <- rmapshaper::ms_simplify(
-            filtered_data,
-            keep = 0.05,
-            keep_shapes = TRUE
-        )
-
         # create actual map
         leaflet::leaflet(options = leafletOptions(preferCanvas = TRUE)) |>
             leaflet::addProviderTiles(
@@ -200,9 +197,7 @@ server <- function(input, output, session) {
                 zoom = 12
             ) |>
             leafgl::addGlPolygons(
-                data = filtered_data
-                    # NOTE: Remove this line if you want to show "No data"
-                    |> dplyr::filter(!is.na(get(var_name))),
+                data = filtered_data,
                 #--------------------------------------------------
                 # fill layout of the grids
                 # fillColor = pal(vals),
