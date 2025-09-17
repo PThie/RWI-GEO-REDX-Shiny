@@ -6,3 +6,4 @@ debug.log
 /data/model_coefficients_year*
 /data/smearing_factor_year*
 /data/RWIGEOREDX_*
+/data/fixed_effects_grids_*
