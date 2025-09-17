@@ -142,6 +142,27 @@ server <- function(input, output, session) {
     # NOTE: for background maps check: https://leaflet-extras.github.io/leaflet-providers/preview/
 
     output$map <- leaflet::renderLeaflet({
+        leaflet(options = leafletOptions(preferCanvas = TRUE)) |>
+        addProviderTiles(providers$CartoDB.Positron) |>
+        setView(
+            lng = essen_centroid_coords$lon,
+            lat = essen_centroid_coords$lat,
+            zoom = 12
+        ) |>
+        #--------------------------------------------------
+        # add special features (fullscreen, search, reset)
+        leaflet.extras::addFullscreenControl() |>
+        leaflet.extras::addSearchOSM(
+            options = leaflet.extras::searchOptions(
+                zoom = 15,
+                autoCollapse = FALSE,
+                hideMarkerOnCollapse = TRUE
+            )
+        ) |>
+        leaflet.extras::addResetMapButton()
+    })
+
+    shiny::observe({
         shiny::req(
             housing_type_data(),
             var_of_interest()
@@ -157,13 +178,11 @@ server <- function(input, output, session) {
 
         # retrieve values
         vals <- filtered_data[[var_name]]
-        non_missing_vals <- vals[!is.na(vals)]
 
         # define color palette
         pal <- leaflet::colorNumeric(
             palette = "plasma",
-            # domain = filtered_data[[var_name]][!is.na(filtered_data[[var_name]])],
-            domain = non_missing_vals,
+            domain = vals,
             na.color = "#DBDBDB"
         )
 
@@ -186,58 +205,27 @@ server <- function(input, output, session) {
             )
         }
 
-        # create actual map
-        leaflet::leaflet(options = leafletOptions(preferCanvas = TRUE)) |>
-            leaflet::addProviderTiles(
-                providers$CartoDB.Positron
-            ) |>
-            leaflet::setView(
-                lng = essen_centroid_coords$lon,
-                lat = essen_centroid_coords$lat,
-                zoom = 12
-            ) |>
+        map <- leaflet::leafletProxy("map", data = filtered_data) |>
+            leaflet::clearShapes() |>
+            leaflet::clearControls() |>
             leafgl::addGlPolygons(
                 data = filtered_data,
-                #--------------------------------------------------
-                # fill layout of the grids
-                # fillColor = pal(vals),
-                # USE previous line if you want to show "No data"
-                fillColor = pal(non_missing_vals),
+                fillColor = pal(vals),
                 fillOpacity = 0.9,
                 popup = ~ popup_text
             ) |>
             # Overlay map labels on top
             leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronOnlyLabels) |>
-            # NOTE: two legends to place the "No data" legend below the coloring
-            # legend. Having all in one caused the problem that for rents the
-            # "no data" label appeared right to the numbers (instead of below).
-            # TODO: add option to show/hide "No data" legend
-            # leaflet::addLegend(
-            #     position  = "bottomright",
-            #     colors    = "#DBDBDB",
-            #     labels    = "No data",
-            #     opacity   = 0.9,
-            #     title     = NULL,
-            # ) |>
             leaflet::addLegend(
                 position = "bottomright",
                 pal = pal,
                 opacity = 0.9,
-                values = non_missing_vals,
+                values = vals,
                 title = legend_title,
                 na.label = NA
-            ) |>
-            #--------------------------------------------------
-            # add special features (fullscreen, search, reset)
-            leaflet.extras::addFullscreenControl() |>
-            leaflet.extras::addSearchOSM(
-                options = leaflet.extras::searchOptions(
-                    zoom = 15,
-                    autoCollapse = FALSE,
-                    hideMarkerOnCollapse = TRUE
-                )
-            ) |>
-            leaflet.extras::addResetMapButton()
+            )
+
+        map
     })
 
     #--------------------------------------------------
@@ -250,10 +238,9 @@ server <- function(input, output, session) {
         )
 
         # filter coefficients for housing type
-        filtered_coefs_housing_type <- hedonic_model_coefs |>
-            dplyr::filter(
-                housing_type == input$selected_housing_type_builder
-            )
+        filtered_coefs_housing_type <- hedonic_model_coefs[
+            housing_type == input$selected_housing_type_builder
+        ]
 
         # filter for characteristics
         if (input$selected_housing_type_builder == "WM") {
@@ -271,57 +258,82 @@ server <- function(input, output, session) {
                 input$selected_basement_WM
             )
 
-            filtered_coefs <- filtered_coefs_housing_type |>
-                dplyr::filter(
-                    # shared characteristics
-                    (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment_WM)) |
-                    (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year_WM)) |
-                    (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy_WM)) |
-                    (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc_WM)) |
-                    (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms_WM)) |
-                    # specific characteristics
-                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony_WM)) |
-                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen_WM)) |
-                    (var_name == "garten" & org_cat == as.integer(input$selected_garden_WM)) |
-                    (var_name == "keller" & org_cat == as.integer(input$selected_basement_WM))
-                )
-        } else if (input$selected_housing_type_builder == "WK") {
-                shiny::req(
-                    # shared characteristics across all housing types
-                    input$selected_endowment_WK,
-                    input$selected_construction_year_WK,
-                    input$selected_occupancy_WK,
-                    input$selected_guestwc_WK,
-                    input$selected_numrooms_WK,
-                    # characteristics specific to housing type
-                    input$selected_elevator_WK,
-                    input$selected_balcony_WK,
-                    input$selected_wohngeld_WK,
-                    input$selected_built_in_kitchen_WK,
-                    input$selected_floor_WK,
-                    input$selected_garden_WK,
-                    input$selected_basement_WK,
-                    input$selected_num_floors_WK
-                )
+            endow      <- as.integer(input$selected_endowment_WM)
+            const_year <- as.integer(input$selected_construction_year_WM)
+            occup      <- as.integer(input$selected_occupancy_WM)
+            guestwc    <- as.integer(input$selected_guestwc_WM)
+            rooms      <- as.integer(input$selected_numrooms_WM)
+            balcony    <- as.integer(input$selected_balcony_WM)
+            kitchen    <- as.integer(input$selected_built_in_kitchen_WM)
+            garden     <- as.integer(input$selected_garden_WM)
+            basement   <- as.integer(input$selected_basement_WM)
 
-            filtered_coefs <- filtered_coefs_housing_type |>
-                dplyr::filter(
-                    # shared characteristics
-                    (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment_WK)) |
-                    (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year_WK)) |
-                    (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy_WK)) |
-                    (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc_WK)) |
-                    (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms_WK)) |
-                    # specific characteristics
-                    (var_name == "aufzug" & org_cat == as.integer(input$selected_elevator_WK)) |
-                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony_WK)) |
-                    (var_name == "declared_wohngeld" & org_cat == as.integer(input$selected_wohngeld_WK)) |
-                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen_WK)) |
-                    (var_name == "floors_cat" & org_cat == as.integer(input$selected_floor_WK)) |
-                    (var_name == "garten" & org_cat == as.integer(input$selected_garden_WK)) |
-                    (var_name == "keller" & org_cat == as.integer(input$selected_basement_WK)) |
-                    (var_name == "num_floors_cat" & org_cat == as.integer(input$selected_num_floors_WK))
+            filtered_coefs <- filtered_coefs_housing_type[
+                data.table::fcase(
+                    var_name == "ausstattung"           & org_cat == endow,      TRUE,
+                    var_name == "construction_year_cat" & org_cat == const_year, TRUE,
+                    var_name == "first_occupancy"       & org_cat == occup,      TRUE,
+                    var_name == "gaestewc"              & org_cat == guestwc,    TRUE,
+                    var_name == "zimmeranzahl_full"     & org_cat == rooms,      TRUE,
+                    var_name == "balkon"                & org_cat == balcony,    TRUE,
+                    var_name == "einbaukueche"          & org_cat == kitchen,    TRUE,
+                    var_name == "garten"                & org_cat == garden,     TRUE,
+                    var_name == "keller"                & org_cat == basement,   TRUE,
+                    default = FALSE
                 )
+            ]
+        } else if (input$selected_housing_type_builder == "WK") {
+            shiny::req(
+                # shared characteristics across all housing types
+                input$selected_endowment_WK,
+                input$selected_construction_year_WK,
+                input$selected_occupancy_WK,
+                input$selected_guestwc_WK,
+                input$selected_numrooms_WK,
+                # characteristics specific to housing type
+                input$selected_elevator_WK,
+                input$selected_balcony_WK,
+                input$selected_wohngeld_WK,
+                input$selected_built_in_kitchen_WK,
+                input$selected_floor_WK,
+                input$selected_garden_WK,
+                input$selected_basement_WK,
+                input$selected_num_floors_WK
+            )
+
+            endow   <- as.integer(input$selected_endowment_WK)
+            constyr <- as.integer(input$selected_construction_year_WK)
+            occup   <- as.integer(input$selected_occupancy_WK)
+            guestwc <- as.integer(input$selected_guestwc_WK)
+            rooms   <- as.integer(input$selected_numrooms_WK)
+
+            elev    <- as.integer(input$selected_elevator_WK)
+            balc    <- as.integer(input$selected_balcony_WK)
+            wohng   <- as.integer(input$selected_wohngeld_WK)
+            kit     <- as.integer(input$selected_built_in_kitchen_WK)
+            floor   <- as.integer(input$selected_floor_WK)
+            garden  <- as.integer(input$selected_garden_WK)
+            basem   <- as.integer(input$selected_basement_WK)
+            floors  <- as.integer(input$selected_num_floors_WK)
+
+            filtered_coefs <- filtered_coefs_housing_type[
+                data.table::fcase(
+                    var_name == "ausstattung"           & org_cat == endow,   TRUE,
+                    # var_name == "construction_year_cat" & org_cat == constyr, TRUE,
+                    var_name == "first_occupancy"       & org_cat == occup,   TRUE,
+                    var_name == "gaestewc"              & org_cat == guestwc, TRUE,
+                    var_name == "zimmeranzahl_full"     & org_cat == rooms,   TRUE,
+                    var_name == "aufzug"                & org_cat == elev,    TRUE,
+                    var_name == "balkon"                & org_cat == balc,    TRUE,
+                    var_name == "declared_wohngeld"     & org_cat == wohng,   TRUE,
+                    var_name == "einbaukueche"          & org_cat == kit,     TRUE,
+                    var_name == "floors_cat"            & org_cat == floor,   TRUE,
+                    var_name == "garten"                & org_cat == garden,  TRUE,
+                    var_name == "keller"                & org_cat == basem,   TRUE,
+                    var_name == "num_floors_cat"        & org_cat == floors,  TRUE,
+                    default = FALSE
+                )
+            ]
         } else {
             shiny::req(
                 # shared characteristics across all housing types
@@ -340,25 +352,40 @@ server <- function(input, output, session) {
                 input$selected_detached_HK,
                 input$selected_other_HK
             )
-            
-            filtered_coefs <- filtered_coefs_housing_type |>
-                dplyr::filter(
-                    # shared characteristics
-                    (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment_HK)) |
-                    (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year_HK)) |
-                    (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy_HK)) |
-                    (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc_HK)) |
-                    (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms_HK)) |
-                    # specific characteristics
-                    (var_name == "einliegerwohnung" & org_cat == as.integer(input$selected_grannyflat_HK)) |
-                    (var_name == "plot_area_cat" & org_cat == as.integer(input$selected_plot_area_HK)) |
-                    (var_name == "typ_DHH" & org_cat == as.integer(input$selected_semidetached_HK)) |
-                    (var_name == "typ_MFH" & org_cat == as.integer(input$selected_mfh_HK)) |
-                    (var_name == "typ_Reihenhaus" & org_cat == as.integer(input$selected_terraced_HK)) |
-                    (var_name == "typ_exclusive" & org_cat == as.integer(input$selected_exclusive_HK)) |
-                    (var_name == "typ_freistehend" & org_cat == as.integer(input$selected_detached_HK)) |
-                    (var_name == "typ_other" & org_cat == as.integer(input$selected_other_HK))
+
+            endow   <- as.integer(input$selected_endowment_HK)
+            constyr <- as.integer(input$selected_construction_year_HK)
+            occup   <- as.integer(input$selected_occupancy_HK)
+            guestwc <- as.integer(input$selected_guestwc_HK)
+            rooms   <- as.integer(input$selected_numrooms_HK)
+
+            granny  <- as.integer(input$selected_grannyflat_HK)
+            plot    <- as.integer(input$selected_plot_area_HK)
+            dhh     <- as.integer(input$selected_semidetached_HK)
+            mfh     <- as.integer(input$selected_mfh_HK)
+            terr    <- as.integer(input$selected_terraced_HK)
+            excl    <- as.integer(input$selected_exclusive_HK)
+            det     <- as.integer(input$selected_detached_HK)
+            other   <- as.integer(input$selected_other_HK)
+
+            filtered_coefs <- filtered_coefs_housing_type[
+                data.table::fcase(
+                    var_name == "ausstattung"           & org_cat == endow,   TRUE,
+                    var_name == "construction_year_cat" & org_cat == constyr, TRUE,
+                    var_name == "first_occupancy"       & org_cat == occup,   TRUE,
+                    var_name == "gaestewc"              & org_cat == guestwc, TRUE,
+                    var_name == "zimmeranzahl_full"     & org_cat == rooms,   TRUE,
+                    var_name == "einliegerwohnung"      & org_cat == granny,  TRUE,
+                    var_name == "plot_area_cat"         & org_cat == plot,    TRUE,
+                    var_name == "typ_DHH"               & org_cat == dhh,     TRUE,
+                    var_name == "typ_MFH"               & org_cat == mfh,     TRUE,
+                    var_name == "typ_Reihenhaus"        & org_cat == terr,    TRUE,
+                    var_name == "typ_exclusive"         & org_cat == excl,    TRUE,
+                    var_name == "typ_freistehend"       & org_cat == det,     TRUE,
+                    var_name == "typ_other"             & org_cat == other,   TRUE,
+                    default = FALSE
                 )
+            ]
         }
 
         # return
@@ -390,6 +417,7 @@ server <- function(input, output, session) {
         total_effect
     })
 
+    # render total effect
     output$total_effect <- renderText({
         shiny::req(total_effect())
 
@@ -408,6 +436,4 @@ server <- function(input, output, session) {
             " \U20AC/m\u00B2"
         )
     })
-
-
 }
