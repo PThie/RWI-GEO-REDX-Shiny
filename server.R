@@ -102,7 +102,7 @@ server <- function(input, output, session) {
                 price_label = price_label,
                 # define popup text
                 # TODO: handle NAs in city_name
-                popup_text = glue::glue(
+                popup_text = as.character(glue::glue(
                     "<div style='width:250px; font-family:Calibri, sans-serif;'>",
                         "<p style = \"font-size:100%; color:grey; margin:0;\">Grid in:</p>",
                         "<p style = \"font-size:140%; margin:0;\">{city_name}</p>",
@@ -138,7 +138,7 @@ server <- function(input, output, session) {
                             )
                         }</p>",
                     "</div>"
-                )
+                ))
             )
 
         filtered
@@ -259,30 +259,7 @@ server <- function(input, output, session) {
 
     coefficients <- reactive({
         shiny::req(
-            input$selected_housing_type_builder,
-            # shared characteristics across all housing types
-            input$selected_endowment,
-            input$selected_construction_year,
-            input$selected_occupancy,
-            input$selected_guestwc,
-            input$selected_numrooms,
-            # characteristics specific to housing type
-            input$selected_elevator,
-            input$selected_balcony,
-            input$selected_wohngeld,
-            input$selected_built_in_kitchen,
-            input$selected_floor,
-            input$selected_garden,
-            input$selected_basement,
-            input$selected_num_floors,
-            input$selected_grannyflat,
-            input$selected_plot_area,
-            input$selected_semidetached,
-            input$selected_mfh,
-            input$selected_terraced,
-            input$selected_exclusive,
-            input$selected_detached,
-            input$selected_other
+            input$selected_housing_type_builder
         )
 
         # filter coefficients for housing type
@@ -291,62 +268,159 @@ server <- function(input, output, session) {
                 housing_type == input$selected_housing_type_builder
             )
 
-        # filter for shared characteristics across all housing types
-        filtered_coefs_shared <- filtered_coefs_housing_type |>
-            dplyr::filter(
-                (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment)) |
-                (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year)) |
-                (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy)) |
-                (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc)) |
-                (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms))
+        # filter for characteristics
+        if (input$selected_housing_type_builder == "WM") {
+            shiny::req(
+                # shared characteristics across all housing types
+                input$selected_endowment_WM,
+                input$selected_construction_year_WM,
+                input$selected_occupancy_WM,
+                input$selected_guestwc_WM,
+                input$selected_numrooms_WM,
+                # characteristics specific to housing type
+                input$selected_balcony_WM,
+                input$selected_built_in_kitchen_WM,
+                input$selected_garden_WM,
+                input$selected_basement_WM
             )
 
-        # filter for characteristics specific to housing type
-        if (input$selected_housing_type_builder == "WM") {
-            filtered_coefs_specific <- filtered_coefs_housing_type |>
+            filtered_coefs <- filtered_coefs_housing_type |>
                 dplyr::filter(
-                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony)) |
-                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen)) |
-                    (var_name == "garten" & org_cat == as.integer(input$selected_garden)) |
-                    (var_name == "keller" & org_cat == as.integer(input$selected_basement))
+                    # shared characteristics
+                    (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment_WM)) |
+                    (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year_WM)) |
+                    (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy_WM)) |
+                    (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc_WM)) |
+                    (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms_WM)) |
+                    # specific characteristics
+                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony_WM)) |
+                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen_WM)) |
+                    (var_name == "garten" & org_cat == as.integer(input$selected_garden_WM)) |
+                    (var_name == "keller" & org_cat == as.integer(input$selected_basement_WM))
                 )
         } else if (input$selected_housing_type_builder == "WK") {
-            filtered_coefs_specific <- filtered_coefs_housing_type |>
+                shiny::req(
+                    # shared characteristics across all housing types
+                    input$selected_endowment_WK,
+                    input$selected_construction_year_WK,
+                    input$selected_occupancy_WK,
+                    input$selected_guestwc_WK,
+                    input$selected_numrooms_WK,
+                    # characteristics specific to housing type
+                    input$selected_elevator_WK,
+                    input$selected_balcony_WK,
+                    input$selected_wohngeld_WK,
+                    input$selected_built_in_kitchen_WK,
+                    input$selected_floor_WK,
+                    input$selected_garden_WK,
+                    input$selected_basement_WK,
+                    input$selected_num_floors_WK
+                )
+
+            filtered_coefs <- filtered_coefs_housing_type |>
                 dplyr::filter(
-                    (var_name == "aufzug" & org_cat == as.integer(input$selected_elevator)) |
-                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony)) |
-                    (var_name == "declared_wohngeld" & org_cat == as.integer(input$selected_wohngeld)) |
-                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen)) |
-                    (var_name == "floors_cat" & org_cat == as.integer(input$selected_floor)) |
-                    (var_name == "garten" & org_cat == as.integer(input$selected_garden)) |
-                    (var_name == "keller" & org_cat == as.integer(input$selected_basement)) |
-                    (var_name == "num_floors_cat" & org_cat == as.integer(input$selected_num_floors))
+                    # shared characteristics
+                    (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment_WK)) |
+                    (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year_WK)) |
+                    (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy_WK)) |
+                    (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc_WK)) |
+                    (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms_WK)) |
+                    # specific characteristics
+                    (var_name == "aufzug" & org_cat == as.integer(input$selected_elevator_WK)) |
+                    (var_name == "balkon" & org_cat == as.integer(input$selected_balcony_WK)) |
+                    (var_name == "declared_wohngeld" & org_cat == as.integer(input$selected_wohngeld_WK)) |
+                    (var_name == "einbaukueche" & org_cat == as.integer(input$selected_built_in_kitchen_WK)) |
+                    (var_name == "floors_cat" & org_cat == as.integer(input$selected_floor_WK)) |
+                    (var_name == "garten" & org_cat == as.integer(input$selected_garden_WK)) |
+                    (var_name == "keller" & org_cat == as.integer(input$selected_basement_WK)) |
+                    (var_name == "num_floors_cat" & org_cat == as.integer(input$selected_num_floors_WK))
                 )
         } else {
-            filtered_coefs_specific <- filtered_coefs_housing_type |>
+            shiny::req(
+                # shared characteristics across all housing types
+                input$selected_endowment_HK,
+                input$selected_construction_year_HK,
+                input$selected_occupancy_HK,
+                input$selected_guestwc_HK,
+                input$selected_numrooms_HK,
+                # characteristics specific to housing type
+                input$selected_grannyflat_HK,
+                input$selected_plot_area_HK,
+                input$selected_semidetached_HK,
+                input$selected_mfh_HK,
+                input$selected_terraced_HK,
+                input$selected_exclusive_HK,
+                input$selected_detached_HK,
+                input$selected_other_HK
+            )
+            
+            filtered_coefs <- filtered_coefs_housing_type |>
                 dplyr::filter(
-                    (var_name == "einliegerwohnung" & org_cat == as.integer(input$selected_grannyflat)) |
-                    (var_name == "plot_area_cat" & org_cat == as.integer(input$selected_plot_area)) |
-                    (var_name == "typ_DHH" & org_cat == as.integer(input$selected_semidetached)) |
-                    (var_name == "typ_MFH" & org_cat == as.integer(input$selected_mfh)) |
-                    (var_name == "typ_Reihenhaus" & org_cat == as.integer(input$selected_terraced)) |
-                    (var_name == "typ_exclusive" & org_cat == as.integer(input$selected_exclusive)) |
-                    (var_name == "typ_freistehend" & org_cat == as.integer(input$selected_detached)) |
-                    (var_name == "typ_other" & org_cat == as.integer(input$selected_other))
+                    # shared characteristics
+                    (var_name == "ausstattung" & org_cat == as.integer(input$selected_endowment_HK)) |
+                    (var_name == "construction_year_cat" & org_cat == as.integer(input$selected_construction_year_HK)) |
+                    (var_name == "first_occupancy" & org_cat == as.integer(input$selected_occupancy_HK)) |
+                    (var_name == "gaestewc" & org_cat == as.integer(input$selected_guestwc_HK)) |
+                    (var_name == "zimmeranzahl_full" & org_cat == as.integer(input$selected_numrooms_HK)) |
+                    # specific characteristics
+                    (var_name == "einliegerwohnung" & org_cat == as.integer(input$selected_grannyflat_HK)) |
+                    (var_name == "plot_area_cat" & org_cat == as.integer(input$selected_plot_area_HK)) |
+                    (var_name == "typ_DHH" & org_cat == as.integer(input$selected_semidetached_HK)) |
+                    (var_name == "typ_MFH" & org_cat == as.integer(input$selected_mfh_HK)) |
+                    (var_name == "typ_Reihenhaus" & org_cat == as.integer(input$selected_terraced_HK)) |
+                    (var_name == "typ_exclusive" & org_cat == as.integer(input$selected_exclusive_HK)) |
+                    (var_name == "typ_freistehend" & org_cat == as.integer(input$selected_detached_HK)) |
+                    (var_name == "typ_other" & org_cat == as.integer(input$selected_other_HK))
                 )
         }
-
-        # combine both dataframes
-        filtered_coefs <- rbind(
-            filtered_coefs_shared,
-            filtered_coefs_specific
-        )
 
         # return
         filtered_coefs
     })
 
     output$coefficients <- renderTable({coefficients()})
+
+    # sum up coefficients to total effect
+    total_effect <- reactive({
+        shiny::req(
+            coefficients(),
+            input$selected_housing_type_builder
+        )
+
+        # get filtered coefficient
+        coefs <- coefficients()
+
+        # get smearing factor for housing type
+        smearing_factor_housing_type <- smearing_factors |>
+            dplyr::filter(
+                housing_type == input$selected_housing_type_builder
+            ) |>
+            dplyr::pull(smearing_factor)
+
+        # calculate total effect
+        total_effect <- exp(sum(coefs$estimate)) * smearing_factor_housing_type
+
+        total_effect
+    })
+
+    output$total_effect <- renderText({
+        shiny::req(total_effect())
+
+        paste0(
+            "Estimated ",
+            ifelse(
+                input$selected_housing_type_builder == "WM",
+                "rent",
+                "price"
+            ),
+            ": ",
+            scales::comma(
+                round(total_effect(), 2),
+                accuracy = 0.01
+            ),
+            " \U20AC/m\u00B2"
+        )
+    })
 
 
 }
