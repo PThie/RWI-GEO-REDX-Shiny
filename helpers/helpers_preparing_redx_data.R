@@ -23,7 +23,7 @@ helpers_preparing_redx_data <- function(
         file.path(
             config_paths()[["data_path"]],
             paste0(
-                file_name,
+                file_name_abs,
                 ".parquet"
             )
         )
@@ -157,13 +157,12 @@ helpers_preparing_redx_data <- function(
     )
 
     # export
-    sf::st_write(
+    qs::qsave(
         redx_data_sf,
         file.path(
             config_paths()[["data_path"]],
-            "redx_data_prep_sf.gpkg"
-        ),
-        append = FALSE
+            "redx_data_prep_sf.qs"
+        )
     )
 
     #--------------------------------------------------
