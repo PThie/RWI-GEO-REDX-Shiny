@@ -206,13 +206,14 @@ server <- function(input, output, session) {
         }
 
         map <- leaflet::leafletProxy("map", data = filtered_data) |>
-            leaflet::clearShapes() |>
+            leafgl::clearGlLayers() |>
             leaflet::clearControls() |>
             leafgl::addGlPolygons(
                 data = filtered_data,
                 fillColor = pal(vals),
                 fillOpacity = 0.9,
-                popup = ~ popup_text
+                popup = ~ popup_text,
+                layerId = ~ grid
             ) |>
             # Overlay map labels on top
             leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronOnlyLabels) |>
