@@ -327,7 +327,7 @@ ui <- shiny::navbarPage(
                         ),
                         bslib::layout_columns(
                             radioButtons(
-                                inputId = "selected_balcony_WK_WK",
+                                inputId = "selected_balcony_WK",
                                 label = shiny::HTML("<b>Balcony?</b>"),
                                 choices = list(
                                     "Yes" = "1",
