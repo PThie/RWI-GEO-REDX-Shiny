@@ -3,4 +3,6 @@ config.R
 *.Rproj
 .Rhistory
 debug.log
-/data
+/data/model_coefficients_year*
+/data/smearing_factor_year*
+/data/RWIGEOREDX_*
