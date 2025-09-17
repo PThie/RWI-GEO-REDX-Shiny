@@ -11,7 +11,8 @@ helpers_reading_smearing_factors <- function() {
 
     smearing_factors <- arrow::read_parquet(
         file.path(
-            config_paths()[["data_path"]],
+            here::here(),
+            "data",
             "smearing_factors_prep.parquet"
         )
     )

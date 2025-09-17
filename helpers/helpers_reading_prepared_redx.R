@@ -10,12 +10,12 @@ helpers_reading_prepared_redx <- function() {
     #--------------------------------------------------
     # read prepared REDX data
 
-    redx_data <- sf::st_read(
+    redx_data <- qs::qread(
         file.path(
-            config_paths()[["data_path"]],
-            "redx_data_prep_sf.gpkg"
-        ),
-        quiet = TRUE
+            here::here(),
+            "data",
+            "redx_data_prep_sf.qs"
+        )
     )
 
     #--------------------------------------------------

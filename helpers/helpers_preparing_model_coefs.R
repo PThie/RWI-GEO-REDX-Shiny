@@ -20,7 +20,8 @@ helpers_preparing_model_coefs <- function() {
         # read data
         coefs <- data.table::fread(
             file.path(
-                config_paths()[["data_path"]],
+                here::here(),
+                "data",
                 paste0(
                     "model_coefficients_year_absolute_",
                     housing_type,
@@ -46,7 +47,8 @@ helpers_preparing_model_coefs <- function() {
     arrow::write_parquet(
         coefs,
         file.path(
-            config_paths()[["data_path"]],
+            here::here(),
+            "data",
             "model_coefficients_prep.parquet"
         )
     )
@@ -59,7 +61,8 @@ helpers_preparing_model_coefs <- function() {
         # read data
         smearing_factors <- data.table::fread(
             file.path(
-                config_paths()[["data_path"]],
+                here::here(),
+                "data",
                 paste0(
                     "smearing_factor_year_absolute_",
                     housing_type,
@@ -85,7 +88,8 @@ helpers_preparing_model_coefs <- function() {
     arrow::write_parquet(
         smearing_factors,
         file.path(
-            config_paths()[["data_path"]],
+            here::here(),
+            "data",
             "smearing_factors_prep.parquet"
         )
     )

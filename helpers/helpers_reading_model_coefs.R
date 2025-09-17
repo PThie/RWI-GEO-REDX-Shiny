@@ -11,7 +11,8 @@ helpers_reading_model_coefs <- function() {
 
     model <- arrow::read_parquet(
         file.path(
-            config_paths()[["data_path"]],
+            here::here(),
+            "data",
             "model_coefficients_prep.parquet"
         )
     )

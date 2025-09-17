@@ -19,17 +19,19 @@ suppressPackageStartupMessages({
     library(glue)
     library(shinyBS)
     library(bslib)
+    library(jsonlite)
+    library(jsonify)
+    library(here)
+    library(qs)
 })
 
 #--------------------------------------------------
-# source config file
-
-source("config.R")
+# source files
 
 lapply(
     list.files(
         file.path(
-            config_paths()[["project_path"]],
+            here::here(),
             "helpers"
         ),
         full.names = TRUE
@@ -43,8 +45,14 @@ lapply(
 # PUF RWI-GEO-REDX data
 redx_data <- helpers_reading_prepared_redx()
 
-# Essen centroid coordinates
-essen_centroid_coords <- helpers_essen_centroid()
+# Essen centroid
+essen_centroid_coords <- data.table::fread(
+    file.path(
+        here::here(),
+        "data",
+        "essen_centroid_coords.csv"
+    )
+)
 
 # Model information
 hedonic_model_coefs <- helpers_reading_model_coefs()
