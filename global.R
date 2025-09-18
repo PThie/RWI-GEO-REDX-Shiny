@@ -57,5 +57,8 @@ essen_centroid_coords <- helpers_reading_centroid()
 hedonic_model_coefs <- helpers_reading_model_coefs()
 smearing_factors <- helpers_reading_smearing_factors()
 
+# FE information
+regional_fe_data <- helpers_reading_fe()
+
 #--------------------------------------------------
 message("loaded global.R")
