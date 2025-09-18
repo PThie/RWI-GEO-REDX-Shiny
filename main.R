@@ -1,7 +1,18 @@
 #--------------------------------------------------
-# source config file
+# source files
 
 source("config.R")
+
+lapply(
+    list.files(
+        file.path(
+            here::here(),
+            "helpers"
+        ),
+        full.names = TRUE
+    ),
+    source
+)
 
 #--------------------------------------------------
 # preparation
