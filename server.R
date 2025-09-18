@@ -244,7 +244,7 @@ server <- function(input, output, session) {
     #--------------------------------------------------
     # filter coefficients according to user input
 
-    coefficients <- reactive({
+    coefficients_data <- reactive({
         shiny::req(
             input$selected_housing_type_builder
         )
@@ -413,42 +413,60 @@ server <- function(input, output, session) {
     # the user can search for a specific city.
     shiny::updateSelectizeInput(
         session = session,
-        inputId = "selected_city",
+        inputId = "selected_city_builder",
         choices = unique(regional_fe_data$gid_name),
         selected = "",
         server = TRUE
     )
 
+    city_fe_data <- reactive({
+        shiny::req(
+            input$selected_housing_type_builder,
+            input$selected_city_builder,
+            input$selected_year_builder
+        )
+
+        # select FE for city and year
+        filtered_fe <- regional_fe_data[
+            housing_type == input$selected_housing_type_builder &
+            gid_name == input$selected_city_builder &
+            year == input$selected_year_builder
+        ][["weighted_pindex"]]
+
+        filtered_fe
+    })
+
     #--------------------------------------------------
+    # calculate total effect
 
     # sum up coefficients to total effect
     total_effect <- reactive({
         shiny::req(
-            coefficients(),
-            input$selected_housing_type_builder
+            input$selected_housing_type_builder,
+            coefficients_data(),
+            smearing_factors,
+            city_fe_data()
         )
 
         # get filtered coefficient
-        coefs <- coefficients()
+        coefs <- coefficients_data()
+
+        # get FE for city
+        fe_city <- city_fe_data()
 
         # get smearing factor for housing type
-        smearing_factor_housing_type <- smearing_factors |>
-            dplyr::filter(
-                housing_type == input$selected_housing_type_builder
-            ) |>
-            dplyr::pull(smearing_factor)
+        smearing_factor_housing_type <- smearing_factors[
+            housing_type == input$selected_housing_type_builder
+        ][["smearing_factor"]]
 
         # calculate total effect
-        total_effect <- exp(sum(coefs$estimate)) * smearing_factor_housing_type
+        total_effect_logged <- sum(coefs$estimate) + fe_city
+        total_effect <- exp(total_effect_logged) * smearing_factor_housing_type
 
         total_effect
     })
 
     # render total effect
-
-    output$coefficients <- renderTable({coefficients()})
-
-
     output$total_effect <- renderText({
         shiny::req(total_effect())
 
