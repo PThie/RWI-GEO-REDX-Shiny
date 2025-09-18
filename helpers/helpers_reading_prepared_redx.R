@@ -26,6 +26,17 @@ helpers_reading_prepared_redx <- function() {
     }
 
     #--------------------------------------------------
+    # adjust city district names
+
+    redx_data <- redx_data |>
+        dplyr::mutate(
+            city_district = dplyr::case_when(
+                is.na(city_district) ~ "No information",
+                TRUE ~ city_district
+            )
+        )
+
+    #--------------------------------------------------
     # set as data.table
 
     data.table::setDT(redx_data)
