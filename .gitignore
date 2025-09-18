@@ -7,3 +7,4 @@ debug.log
 /data/smearing_factor_year*
 /data/RWIGEOREDX_*
 /data/fixed_effects_grids_*
+/data/redx_data_prep.parquet
