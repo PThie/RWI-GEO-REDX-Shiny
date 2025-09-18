@@ -102,17 +102,25 @@ ui <- shiny::navbarPage(
             tags$head(
                 shiny::includeCSS("www/styles.css")
             ),
-            h3("Select housing type"),
-            selectInput(
-                inputId = "selected_housing_type_builder",
-                label = "",
-                choices = list(
-                    "House sales" = "HK",
-                    "Apartment sales" = "WK",
-                    "Apartment rents" = "WM"
+            bslib::layout_columns(
+                selectInput(
+                    inputId = "selected_housing_type_builder",
+                    label = "Select housing type",
+                    choices = list(
+                        "House sales" = "HK",
+                        "Apartment sales" = "WK",
+                        "Apartment rents" = "WM"
+                    ),
+                    # set default value
+                    selected = "WM"
                 ),
-                # set default value
-                selected = "WM"
+                selectInput(
+                    inputId = "selected_year_builder",
+                    label = "Select year",
+                    choices = seq(2008, max_year, by = 1),
+                    # set default value
+                    selected = max_year
+                )
             ),
             h3("Input the attributes for your desired property"),
             bslib::accordion(
@@ -547,6 +555,14 @@ ui <- shiny::navbarPage(
             ),
             h3("Select your city"),
             # TODO: handle aggregated FE, allow user to search for city
+            shiny::selectizeInput(
+                inputId = "selected_city",
+                label = "Select city",
+                choices = NULL,
+                multiple = FALSE,
+                options = list(placeholder = "Type a city..."),
+                selected = NULL
+            ),
             h3("Hedonic Value Output"),
             # TODO: Button to run?
             tableOutput("coefficients"),

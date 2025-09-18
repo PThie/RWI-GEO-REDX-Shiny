@@ -407,12 +407,17 @@ server <- function(input, output, session) {
     #--------------------------------------------------
     # filter city and year according to user input
 
-    # updateSelectizeInput(
-    #     session = session,
-    #     inputId = "selected_city",
-    #     choices = sort(unique(regional_fe_data$gid_name)),
-    #     server = TRUE
-    # )
+    # update city selection input
+    # NOTE: This is a server-side solution to minimize the loading effort, i.e.
+    # not the entire list of cities is shown to the user but only a subsample but
+    # the user can search for a specific city.
+    shiny::updateSelectizeInput(
+        session = session,
+        inputId = "selected_city",
+        choices = unique(regional_fe_data$gid_name),
+        selected = "",
+        server = TRUE
+    )
 
     #--------------------------------------------------
 
