@@ -94,7 +94,7 @@ server <- function(input, output, session) {
         vdrp <- var_deviation_perc_region()
 
         cols <- c(
-            "grid", "housing_type", "city_name",
+            "grid", "housing_type", "city_name", "city_district", "zipcode",
             vi, vd, vdp,
             vdr, vdrp,
             "geometry"
@@ -162,6 +162,8 @@ server <- function(input, output, session) {
             "<div style='width:250px; font-family:Calibri, sans-serif;'>",
                 "<p style='font-size:100%; color:grey; margin:0;'>Grid in:</p>",
                 "<p style='font-size:140%; margin:0;'>", city_name, "</p>",
+                "<p style='font-size:120%; margin:0;'> City district: ", city_district, "</p>",
+                "<p style='font-size:120%; margin:0;'> Zip-code: ", zipcode, "</p>",
             "</div>",
             "<hr style='margin:4px 0;'/>",
             "<div style='width:250px; font-family:Calibri, sans-serif;'>",
