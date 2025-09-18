@@ -26,6 +26,16 @@ helpers_reading_prepared_redx <- function() {
     }
 
     #--------------------------------------------------
+    # set as data.table
+
+    data.table::setDT(redx_data)
+
+    #--------------------------------------------------
+    # remove rows with NA grid / AGS only once
+
+    redx_data <- redx_data[!is.na(grid) & !is.na(AGS)]
+
+    #--------------------------------------------------
     # return
 
     return(redx_data)
