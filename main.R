@@ -10,7 +10,9 @@ source("config.R")
 helpers_preparing_redx_data(
     file_name_abs = "RWIGEOREDX_GRIDS_V15_PUF_YEAR_ABS",
     file_name_dev_abs = "RWIGEOREDX_GRIDS_V15_PUF_YEAR_DEV_CROSS",
-    file_name_dev_perc = "RWIGEOREDX_GRIDS_V15_PUF_YEAR_DEV_PERC_CROSS"
+    file_name_dev_perc = "RWIGEOREDX_GRIDS_V15_PUF_YEAR_DEV_PERC_CROSS",
+    file_name_dev_abs_region = "RWIGEOREDX_GRIDS_V15_PUF_YEAR_DEV_REGION",
+    file_name_dev_perc_region = "RWIGEOREDX_GRIDS_V15_PUF_YEAR_DEV_PERC_REGION"
 )
 
 # Prepare FE data

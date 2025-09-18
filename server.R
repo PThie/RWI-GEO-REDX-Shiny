@@ -41,6 +41,30 @@ server <- function(input, output, session) {
         var
     })
 
+    var_deviation_region <- reactive({
+        shiny::req(input$selected_year)
+
+        var <- paste0(
+            "pindex",
+            input$selected_year,
+            "_dev_abs_region"
+        )
+
+        var
+    })
+
+    var_deviation_perc_region <- reactive({
+        shiny::req(input$selected_year)
+
+        var <- paste0(
+            "pindex",
+            input$selected_year,
+            "_dev_perc_region"
+        )
+
+        var
+    })
+
     #--------------------------------------------------
     # filter for housing type (choice of user)
 
@@ -50,7 +74,9 @@ server <- function(input, output, session) {
             input$selected_year,
             var_of_interest(),
             var_deviation(),
-            var_deviation_perc()
+            var_deviation_perc(),
+            var_deviation_region(),
+            var_deviation_perc_region()
         )
 
         # define label for price/ rent in popup
@@ -64,8 +90,15 @@ server <- function(input, output, session) {
         vi  <- var_of_interest()
         vd  <- var_deviation()
         vdp <- var_deviation_perc()
+        vdr <- var_deviation_region()
+        vdrp <- var_deviation_perc_region()
 
-        cols <- c("grid", "housing_type", "city_name", vi, vd, vdp, "geometry")
+        cols <- c(
+            "grid", "housing_type", "city_name",
+            vi, vd, vdp,
+            vdr, vdrp,
+            "geometry"
+        )
 
         # filter data to selection
         filtered <- redx_data[
@@ -73,9 +106,9 @@ server <- function(input, output, session) {
             ..cols
         ]
 
-        # add legend output
+        # add formatting for popup numbers
         filtered[, price_fmt :=
-            fifelse(
+            data.table::fifelse(
                 is.na(get(vi)),
                 "No data",
                 paste0(
@@ -89,7 +122,7 @@ server <- function(input, output, session) {
         ]
 
         filtered[, dev_fmt :=
-            fifelse(
+            data.table::fifelse(
                 is.na(get(vd)),
                 "No data",
                 paste0(
@@ -99,6 +132,22 @@ server <- function(input, output, session) {
                     ),
                     " &euro;/m&sup2; (",
                     scales::comma(round(get(vdp), 2), accuracy = 0.01),
+                    "%)"
+                )
+            )
+        ]
+
+        filtered[, dev_region_fmt :=
+            data.table::fifelse(
+                is.na(get(vdr)),
+                "No data",
+                paste0(
+                    scales::comma(
+                        round(get(vdr), 2),
+                        accuracy = 0.01
+                    ),
+                    " &euro;/m&sup2; (",
+                    scales::comma(round(get(vdrp), 2), accuracy = 0.01),
                     "%)"
                 )
             )
@@ -120,8 +169,12 @@ server <- function(input, output, session) {
                 "<p style='font-size:140%; margin:0;'>", price_fmt, "</p>",
             "</div>",
             "<div style='width:250px; font-family:Calibri, sans-serif;'>",
-                "<p style='font-size:100%; color:grey; margin:0;'>Change rel. to German average:</p>",
+                "<p style='font-size:100%; color:grey; margin:0;'>Deviation rel. to German average:</p>",
                 "<p style='font-size:140%; margin:0;'>", dev_fmt, "</p>",
+            "</div>",
+            "<div style='width:250px; font-family:Calibri, sans-serif;'>",
+                "<p style='font-size:100%; color:grey; margin:0;'>Deviation rel. to base period (2008):</p>",
+                "<p style='font-size:140%; margin:0;'>", dev_region_fmt, "</p>",
             "</div>"
             )
         ]

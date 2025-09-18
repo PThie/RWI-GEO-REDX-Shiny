@@ -1,7 +1,9 @@
 helpers_preparing_redx_data <- function(
     file_name_abs = NA,
     file_name_dev_abs = NA,
-    file_name_dev_perc = NA
+    file_name_dev_perc = NA,
+    file_name_dev_abs_region = NA,
+    file_name_dev_perc_region = NA
 ) {
     #' @title Preparing RWI-GEO-REDX data
     #' 
@@ -11,6 +13,8 @@ helpers_preparing_redx_data <- function(
     #' @param file_name_abs Name of the RWI-GEO-REDX data file (absolute values).
     #' @param file_name_dev_abs Name of the RWI-GEO-REDX data file (absolute deviations).
     #' @param file_name_dev_perc Name of the RWI-GEO-REDX data file (percent deviations).
+    #' @param file_name_dev_abs_region Name of the RWI-GEO-REDX data file (absolute deviations within region).
+    #' @param file_name_dev_perc_region Name of the RWI-GEO-REDX data file (percent deviations within region).
     #' 
     #' @return Spatial dataframe with RWI-GEO-REDX data and grid information.
     #' @author Patrick Thiel
@@ -46,6 +50,28 @@ helpers_preparing_redx_data <- function(
             config_paths()[["data_path"]],
             paste0(
                 file_name_dev_perc,
+                ".parquet"
+            )
+        )
+    )
+
+    # REDX deviations (absolute, region)
+    redx_data_dev_abs_region <- arrow::read_parquet(
+        file.path(
+            config_paths()[["data_path"]],
+            paste0(
+                file_name_dev_abs_region,
+                ".parquet"
+            )
+        )
+    )
+
+    # REDX deviations (percent, region)
+    redx_data_dev_perc_region <- arrow::read_parquet(
+        file.path(
+            config_paths()[["data_path"]],
+            paste0(
+                file_name_dev_perc_region,
                 ".parquet"
             )
         )
@@ -109,6 +135,28 @@ helpers_preparing_redx_data <- function(
     )
 
     #--------------------------------------------------
+    # clean deviations regions
+
+    redx_data_dev_abs_region_prep <- redx_data_dev_abs_region |>
+        dplyr::select(-dplyr::contains("NOBS"))
+
+    redx_data_dev_perc_region_prep <- redx_data_dev_perc_region |>
+        dplyr::select(-dplyr::contains("NOBS"))
+
+    # rename variables
+    names(redx_data_dev_abs_region_prep) <- c(
+        "grid",
+        "housing_type",
+        paste(names(redx_data_dev_abs_region_prep)[-c(1:2)], "dev_abs_region", sep = "_")
+    )
+
+    names(redx_data_dev_perc_region_prep) <- c(
+        "grid",
+        "housing_type",
+        paste(names(redx_data_dev_perc_region_prep)[-c(1:2)], "dev_perc_region", sep = "_")
+    )
+
+    #--------------------------------------------------
     # merge deviations with main data
 
     redx_data_prep <- redx_data_prep |>
@@ -121,6 +169,16 @@ helpers_preparing_redx_data <- function(
             redx_data_dev_perc_prep,
             by = c("grid", "housing_type"),
             all.x = TRUE
+        ) |>      
+        merge(
+            redx_data_dev_abs_region_prep,
+            by = c("grid", "housing_type"),
+            all.x = TRUE
+        ) |>
+        merge(
+            redx_data_dev_perc_region_prep,
+            by = c("grid", "housing_type"),
+            all.x = TRUE
         )
 
     #--------------------------------------------------
@@ -128,17 +186,6 @@ helpers_preparing_redx_data <- function(
 
     redx_data_prep <- redx_data_prep |>
         dplyr::filter(grid != "Weighted Mean")
-
-    #--------------------------------------------------
-    # export parquet
-
-    arrow::write_parquet(
-        redx_data_prep,
-        file.path(
-            config_paths()[["data_path"]],
-            "redx_data_prep.parquet"
-        )
-    )
 
     #--------------------------------------------------
     # merge both datasets
@@ -164,9 +211,4 @@ helpers_preparing_redx_data <- function(
             "redx_data_prep_sf.qs"
         )
     )
-
-    #--------------------------------------------------
-    # return
-
-    return(redx_data_sf)
 }
