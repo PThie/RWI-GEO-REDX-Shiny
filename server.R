@@ -88,7 +88,6 @@ server <- function(input, output, session) {
             )
         ]
 
-
         filtered[, dev_fmt :=
             fifelse(
                 is.na(get(vd)),
@@ -174,6 +173,15 @@ server <- function(input, output, session) {
             filtered_data,
             "geometry"
         )
+
+        shiny::validate(
+            shiny::need(
+                nrow(filtered_data) > 0,
+                "No data available for this selection."
+            )
+        )
+
+        # variable of interest
         var_name <- var_of_interest()
 
         # retrieve values
@@ -232,6 +240,9 @@ server <- function(input, output, session) {
     #--------------------------------------------------
     # BUILD YOUR RENT tab
     #--------------------------------------------------
+
+    #--------------------------------------------------
+    # filter coefficients according to user input
 
     coefficients <- reactive({
         shiny::req(
@@ -393,7 +404,17 @@ server <- function(input, output, session) {
         filtered_coefs
     })
 
-    output$coefficients <- renderTable({coefficients()})
+    #--------------------------------------------------
+    # filter city and year according to user input
+
+    # updateSelectizeInput(
+    #     session = session,
+    #     inputId = "selected_city",
+    #     choices = sort(unique(regional_fe_data$gid_name)),
+    #     server = TRUE
+    # )
+
+    #--------------------------------------------------
 
     # sum up coefficients to total effect
     total_effect <- reactive({
@@ -419,6 +440,10 @@ server <- function(input, output, session) {
     })
 
     # render total effect
+
+    output$coefficients <- renderTable({coefficients()})
+
+
     output$total_effect <- renderText({
         shiny::req(total_effect())
 
@@ -437,4 +462,7 @@ server <- function(input, output, session) {
             " \U20AC/m\u00B2"
         )
     })
+
+
+
 }
