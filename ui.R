@@ -556,7 +556,7 @@ ui <- shiny::navbarPage(
             h3("Select your city"),
             # TODO: handle aggregated FE, allow user to search for city
             shiny::selectizeInput(
-                inputId = "selected_city",
+                inputId = "selected_city_builder",
                 label = "Select city",
                 choices = NULL,
                 multiple = FALSE,
